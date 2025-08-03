@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Home</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      padding: 16px;
+    }
+    p {
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
+    .toggle-buttons {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .toggle-buttons button {
+      flex: 1;
+      padding: 10px;
+      border-radius: 10px;
+      font-weight: bold;
+      font-size: 15px;
+      cursor: pointer;
+    }
+    .products-btn {
+      background: #1a73e8;
+      color: white;
+      border: none;
+    }
+    .services-btn {
+      background: white;
+      color: #1a73e8;
+      border: 2px solid #1a73e8;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <p>Select the product or services you need to explore.</p>
+
+    <!-- Toggle Buttons -->
+    <div class="toggle-buttons">
+      <button class="products-btn" onclick="window.location.href='products.html'">Products</button>
+      <button class="services-btn" onclick="window.location.href='services.html'">Services</button>
+    </div>
+
+    <!-- Promotions Section -->
+    <h3 style="margin-bottom: 12px;">Promotions</h3>
+
+    <!-- Promotion Card 1 -->
+    <div style="background: white; border-radius: 12px; margin-bottom: 16px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); overflow: hidden;">
+      <img src="1.jpg" alt="New Year Sale" style="width: 100%; display: block;" />
+      <div style="padding: 12px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 14px;">
+          <strong>Berry Berry</strong>
+          <span style="font-size: 18px;">🔖</span>
+        </div>
+        <h4 style="margin: 8px 0 8px;">New Year Sale</h4>
+        <div style="font-size: 13px; color: #666; display: flex; justify-content: space-between;">
+          <span>Ends on 01/20/2026</span>
+          <span>171 days left</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Promotion Card 2 -->
+    <div style="background: white; border-radius: 12px; margin-bottom: 16px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); overflow: hidden;">
+      <img src="1.jpg" alt="Deal" style="width: 100%; display: block;" />
+      <div style="padding: 12px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 14px;">
+          <strong>Cards</strong>
+          <span style="font-size: 18px;">🔖</span>
+        </div>
+        <h4 style="margin: 8px 0 0;">Deal</h4>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

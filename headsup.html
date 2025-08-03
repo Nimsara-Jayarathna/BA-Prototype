@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HeadsUp</title>
+  <style>
+    :root {
+      --primary: #1a73e8;
+      --light-gray: #f5f5f5;
+      --gray: #ccc;
+      --text-dark: #333;
+      --text-muted: #666;
+      --radius: 12px;
+      --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    body {
+      margin: 0;
+      padding: 16px;
+      font-family: 'Segoe UI', sans-serif;
+      background: var(--light-gray);
+      color: var(--text-dark);
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 4px;
+    }
+
+    .subtitle {
+      text-align: center;
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+
+    .filter-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      position: fixed;
+      bottom: 70px;
+      left: 0;
+      right: 0;
+      z-index: 20;
+    }
+
+    .filter-btn {
+      font-size: 14px;
+      padding: 8px 14px;
+      background: white;
+      border: 1px solid var(--gray);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      cursor: pointer;
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.2s ease;
+    }
+
+    .filter-btn:hover {
+      background: #e9e9e9;
+    }
+
+    .filter-remove {
+      font-size: 16px;
+      color: #999;
+      cursor: pointer;
+    }
+
+    #headsup-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(45%, 1fr));
+      gap: 14px;
+      margin-top: 8px;
+      padding-bottom: 140px; /* space for floating filter buttons */
+    }
+
+    .tile {
+      border-radius: var(--radius);
+      padding: 16px;
+      color: white;
+      font-weight: 500;
+      box-shadow: var(--shadow);
+      cursor: pointer;
+      transition: transform 0.15s ease;
+    }
+
+    .tile:hover {
+      transform: scale(1.02);
+    }
+
+    .floating-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: var(--primary);
+      color: white;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      font-size: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--shadow);
+      cursor: pointer;
+      z-index: 50;
+    }
+
+    .modal,
+    .view-modal,
+    .filter-modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.4);
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+      padding: 16px;
+    }
+
+    .modal-content,
+    .view-content,
+    .filter-content {
+      background: white;
+      padding: 24px;
+      border-radius: 20px;
+      width: 90%;
+      max-width: 480px;
+      max-height: 85vh;
+      overflow-y: auto;
+      box-shadow: var(--shadow);
+      position: relative;
+      animation: fadeInUp 0.3s ease-out;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(40px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .modal-content input,
+    .modal-content select,
+    .modal-content textarea {
+      width: 100%;
+      margin-bottom: 16px;
+      padding: 14px 16px;
+      border-radius: var(--radius);
+      border: 1px solid var(--gray);
+      font-size: 15px;
+      background: #fefefe;
+    }
+
+    .modal-content button,
+    .view-content button {
+      width: 100%;
+      padding: 14px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 500;
+      transition: background 0.2s ease;
+      margin-top: 10px;
+    }
+
+    .modal-content button:hover,
+    .view-content button:hover {
+      background: #1565c0;
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 10px;
+      right: 14px;
+      font-size: 22px;
+      color: #999;
+      cursor: pointer;
+    }
+
+    .view-img {
+      width: 100%;
+      margin-top: 12px;
+      border-radius: 8px;
+      display: none;
+    }
+
+    .chip {
+      background: white;
+      padding: 8px 14px;
+      border-radius: var(--radius);
+      border: 1px solid var(--gray);
+      box-shadow: var(--shadow);
+      cursor: pointer;
+      margin: 6px;
+      display: inline-block;
+    }
+
+    .chip:hover {
+      background: #e0e0e0;
+    }
+  </style>
+</head>
+<body>
+  <h2>What’s Coming Up?</h2>
+  <p class="subtitle">Your HeadsUp list helps you stay ahead of important events and moments.</p>
+
+  <div id="headsup-list"></div>
+
+  <div class="filter-buttons">
+    <button id="filterTypeBtn" class="filter-btn" onclick="openFilterModal('type')">
+      <span id="typeLabel">Filter by Type</span>
+      <span id="typeRemove" class="filter-remove" onclick="removeFilter(event, 'type')" style="display: none;">✕</span>
+    </button>
+    <button id="filterDateBtn" class="filter-btn" onclick="openFilterModal('date')">
+      <span id="dateLabel">Filter by Date</span>
+      <span id="dateRemove" class="filter-remove" onclick="removeFilter(event, 'date')" style="display: none;">✕</span>
+    </button>
+  </div>
+
+  <div class="floating-btn" onclick="openForm()">+</div>
+  <!-- Add Modal -->
+  <div id="modal" class="modal">
+    <div class="modal-content">
+      <div class="close-btn" onclick="closeForm()">×</div>
+      <h3>New HeadsUp</h3>
+      <select id="typeSelect" onchange="toggleCustomType()">
+        <option value="Birthday">Birthday</option>
+        <option value="Fees">Fees</option>
+        <option value="Exam">Exam</option>
+        <option value="Appointment">Appointment</option>
+        <option value="Vehicle">Vehicle</option>
+        <option value="Travel">Travel</option>
+        <option value="Custom">Custom...</option>
+      </select>
+      <input type="text" id="customType" placeholder="Enter custom type" style="display:none;" />
+      <input type="date" id="startDate" />
+      <input type="date" id="remindDate" />
+      <textarea id="remarks" placeholder="Remarks"></textarea>
+      <input type="file" id="photo" accept="image/*" />
+      <button onclick="saveHeadsUp()">Save HeadsUp</button>
+    </div>
+  </div>
+
+  <!-- View Modal -->
+  <div id="viewModal" class="view-modal">
+    <div class="view-content">
+      <div class="close-btn" onclick="closeView()">×</div>
+      <h3 id="viewTitle"></h3>
+      <p id="viewDates" style="font-size: 14px; color: #555;"></p>
+      <p id="viewRemarks" style="font-size: 14px; color: #333;"></p>
+      <img id="viewImage" class="view-img" />
+      <button onclick="editEntry()">Edit</button>
+      <button onclick="deleteEntry()">Delete</button>
+    </div>
+  </div>
+
+  <!-- Filter Modal -->
+  <div id="filterModal" class="filter-modal">
+    <div class="filter-content">
+      <div class="close-btn" onclick="closeFilterModal()">×</div>
+      <div id="filterOptions"></div>
+    </div>
+  </div>
+
+  <script>
+  const entries = [];
+  const predefinedColors = {
+    Birthday: '#AB47BC',
+    Fees: '#42A5F5',
+    Exam: '#FFA000',
+    Appointment: '#26C6DA',
+    Vehicle: '#5C6BC0',
+    Travel: '#26A69A'
+  };
+  const customColor = '#FF7043';
+  let currentFilterType = null;
+  let appliedFilters = { type: null, date: null };
+  let selectedViewIndex = -1;
+
+  function openForm() {
+    document.getElementById('modal').style.display = 'flex';
+    document.getElementById('startDate').valueAsDate = new Date();
+  }
+
+  function closeForm() {
+    document.getElementById('modal').style.display = 'none';
+    clearFormFields();
+  }
+
+  function clearFormFields() {
+    document.getElementById('typeSelect').value = 'Birthday';
+    document.getElementById('customType').style.display = 'none';
+    document.getElementById('customType').value = '';
+    document.getElementById('remindDate').value = '';
+    document.getElementById('remarks').value = '';
+    document.getElementById('photo').value = '';
+  }
+
+  function toggleCustomType() {
+    document.getElementById('customType').style.display =
+      document.getElementById('typeSelect').value === 'Custom' ? 'block' : 'none';
+  }
+  function saveHeadsUp() {
+    const typeSelect = document.getElementById('typeSelect').value;
+    const customType = document.getElementById('customType').value;
+    const type = typeSelect === 'Custom' ? (customType || 'Custom') : typeSelect;
+    const startDate = document.getElementById('startDate').value;
+    const remindDate = document.getElementById('remindDate').value;
+    const remarks = document.getElementById('remarks').value;
+    const photoFile = document.getElementById('photo').files[0];
+
+    if (!type || !remindDate) return alert('Please fill all required fields');
+
+    const reader = new FileReader();
+    reader.onload = function () {
+      const imageUrl = photoFile ? reader.result : null;
+      const color = predefinedColors[type] || customColor;
+      entries.push({ type, startDate, remindDate, remarks, imageUrl, color });
+      renderEntries();
+      closeForm();
+    };
+
+    if (photoFile) reader.readAsDataURL(photoFile);
+    else reader.onload();
+  }
+
+  function renderEntries() {
+    const list = document.getElementById('headsup-list');
+    list.innerHTML = '';
+    const now = new Date();
+
+    entries.forEach((entry, index) => {
+      if (appliedFilters.type && entry.type !== appliedFilters.type && !isCustomMatch(entry)) return;
+
+      if (appliedFilters.date) {
+        const remind = new Date(entry.remindDate);
+        const filterDate = appliedFilters.date;
+        if (typeof filterDate === 'string') {
+          const match = {
+            'Tomorrow': () => isSameDay(remind, addDays(now, 1)),
+            'This Week': () => isSameWeek(remind, now),
+            'Next Week': () => isSameWeek(remind, addDays(now, 7)),
+            'This Month': () => remind.getMonth() === now.getMonth() && remind.getFullYear() === now.getFullYear(),
+            'This Year': () => remind.getFullYear() === now.getFullYear()
+          }[filterDate];
+          if (!match || !match()) return;
+        } else if (filterDate instanceof Date) {
+          if (!isSameDay(remind, filterDate)) return;
+        }
+      }
+
+      const tile = document.createElement('div');
+      tile.className = 'tile';
+      tile.style.background = entry.color;
+      tile.innerHTML = `<div style="font-weight: bold;">${entry.type}</div>
+                        <div style="font-size: 13px;">Remind: ${new Date(entry.remindDate).toDateString()}</div>`;
+      tile.onclick = () => showDetail(entry, index);
+      list.appendChild(tile);
+    });
+  }
+
+  function isCustomMatch(entry) {
+    return appliedFilters.type === 'Custom' && !(entry.type in predefinedColors);
+  }
+
+  function showDetail(entry, index) {
+    selectedViewIndex = index;
+    document.getElementById('viewTitle').textContent = entry.type;
+    document.getElementById('viewDates').innerHTML = `Start: ${new Date(entry.startDate).toDateString()}<br/>Remind: ${new Date(entry.remindDate).toDateString()}`;
+    document.getElementById('viewRemarks').textContent = entry.remarks;
+    const img = document.getElementById('viewImage');
+    if (entry.imageUrl) {
+      img.src = entry.imageUrl;
+      img.style.display = 'block';
+    } else {
+      img.style.display = 'none';
+    }
+    document.getElementById('viewModal').style.display = 'flex';
+  }
+
+  function closeView() {
+    document.getElementById('viewModal').style.display = 'none';
+  }
+
+  function editEntry() {
+    if (selectedViewIndex === -1) return;
+
+    const entry = entries[selectedViewIndex];
+    document.getElementById('typeSelect').value = predefinedColors[entry.type] ? entry.type : 'Custom';
+    toggleCustomType();
+    if (!(entry.type in predefinedColors)) document.getElementById('customType').value = entry.type;
+    document.getElementById('startDate').value = entry.startDate;
+    document.getElementById('remindDate').value = entry.remindDate;
+    document.getElementById('remarks').value = entry.remarks;
+    document.getElementById('photo').value = '';
+    entries.splice(selectedViewIndex, 1);
+    selectedViewIndex = -1;
+    closeView();
+    openForm();
+  }
+
+  function deleteEntry() {
+    if (selectedViewIndex === -1) return;
+    entries.splice(selectedViewIndex, 1);
+    selectedViewIndex = -1;
+    renderEntries();
+    closeView();
+  }
+
+  function openFilterModal(type) {
+    currentFilterType = type;
+    const modal = document.getElementById('filterModal');
+    const options = document.getElementById('filterOptions');
+    options.innerHTML = '';
+
+    if (type === 'type') {
+      ['Birthday', 'Fees', 'Exam', 'Appointment', 'Vehicle', 'Travel', 'Custom'].forEach(label => {
+        const btn = document.createElement('button');
+        btn.className = 'chip';
+        btn.textContent = label;
+        btn.onclick = () => {
+          applyFilter(type, label);
+          closeFilterModal();
+        };
+        options.appendChild(btn);
+      });
+    } else {
+      ['Tomorrow', 'This Week', 'Next Week', 'This Month', 'This Year', 'Custom Date'].forEach(label => {
+        const btn = document.createElement('button');
+        btn.className = 'chip';
+        btn.textContent = label;
+        btn.onclick = () => {
+          if (label === 'Custom Date') {
+            const input = prompt('Enter date (YYYY-MM-DD):');
+            const date = new Date(input);
+            if (!isNaN(date)) {
+              applyFilter(type, date);
+              closeFilterModal();
+            }
+          } else {
+            applyFilter(type, label);
+            closeFilterModal();
+          }
+        };
+        options.appendChild(btn);
+      });
+    }
+
+    modal.style.display = 'flex';
+  }
+
+  function closeFilterModal() {
+    document.getElementById('filterModal').style.display = 'none';
+  }
+
+  function applyFilter(type, value) {
+    appliedFilters[type] = value;
+    if (type === 'type') {
+      document.getElementById('typeLabel').textContent = value;
+      document.getElementById('typeRemove').style.display = 'inline';
+    } else {
+      document.getElementById('dateLabel').textContent = value instanceof Date
+        ? value.toISOString().split('T')[0]
+        : value;
+      document.getElementById('dateRemove').style.display = 'inline';
+    }
+    renderEntries();
+  }
+
+  function removeFilter(event, type) {
+    event.stopPropagation();
+    appliedFilters[type] = null;
+    if (type === 'type') {
+      document.getElementById('typeLabel').textContent = 'Filter by Type';
+      document.getElementById('typeRemove').style.display = 'none';
+    } else {
+      document.getElementById('dateLabel').textContent = 'Filter by Date';
+      document.getElementById('dateRemove').style.display = 'none';
+    }
+    renderEntries();
+  }
+
+  // Helpers
+  function addDays(date, days) {
+    const result = new Date(date);
+    result.setDate(result.getDate() + days);
+    return result;
+  }
+
+  function isSameDay(d1, d2) {
+    return d1.getDate() === d2.getDate() &&
+           d1.getMonth() === d2.getMonth() &&
+           d1.getFullYear() === d2.getFullYear();
+  }
+
+  function isSameWeek(d1, d2) {
+    const startOfWeek = new Date(d2);
+    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(endOfWeek.getDate() + 6);
+    return d1 >= startOfWeek && d1 <= endOfWeek;
+  }
+  </script>
+</body>
+</html>

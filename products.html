@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Products</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      padding: 16px;
+    }
+    p {
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
+    .toggle-buttons {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .toggle-buttons button {
+      flex: 1;
+      padding: 10px;
+      border-radius: 10px;
+      font-weight: bold;
+      font-size: 15px;
+      cursor: pointer;
+    }
+    .active {
+      background: #1a73e8;
+      color: white;
+      border: none;
+    }
+    .inactive {
+      background: white;
+      color: #1a73e8;
+      border: 2px solid #1a73e8;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+    .card {
+      background: white;
+      border-radius: 12px;
+      text-align: center;
+      padding: 16px;
+      position: relative;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+    .card span {
+      position: absolute;
+      top: 8px;
+      right: 12px;
+      background: #1a73e8;
+      color: white;
+      padding: 2px 6px;
+      font-size: 12px;
+      border-radius: 10px;
+    }
+    .card img {
+      width: 50px;
+      margin-bottom: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <p>Select the product or services you need to explore.</p>
+
+    <div class="toggle-buttons">
+      <button class="active">Products</button>
+      <button class="inactive" onclick="window.location.href='services.html'">Services</button>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <span>4</span>
+        <img src="icons/electronics.svg" alt="Electronics">
+        <p>Electronics</p>
+      </div>
+      <div class="card">
+        <span>0</span>
+        <img src="icons/home.svg" alt="Home & Garden">
+        <p>Home & Garden</p>
+      </div>
+      <div class="card">
+        <span>0</span>
+        <img src="icons/tools.svg" alt="Tools & Machinery">
+        <p>Tools & Machinery</p>
+      </div>
+      <div class="card">
+        <span>0</span>
+        <img src="icons/vehicle.svg" alt="Vehicle">
+        <p>Vehicle</p>
+      </div>
+      <div class="card">
+        <span>0</span>
+        <img src="icons/toys.svg" alt="Toys & Sport">
+        <p>Toys & Sport</p>
+      </div>
+      <div class="card">
+        <span>0</span>
+        <img src="icons/fashion.svg" alt="Fashion & Beauty">
+        <p>Fashion & Beauty</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

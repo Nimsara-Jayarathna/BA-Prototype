@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 64 64" fill="none">
+  <!-- House -->
+  <path d="M8 32L32 12L56 32V56H40V40H24V56H8V32Z" fill="#4CAF50"/>
+  <path d="M24 56V40H40V56" fill="#81C784"/>
+  <path d="M32 12L8 32H16V56H24V40H40V56H48V32H56L32 12Z" stroke="#2E7D32" stroke-width="2"/>
+
+  <!-- Key -->
+  <circle cx="48" cy="48" r="4" fill="#FFC107"/>
+  <rect x="52" y="47" width="10" height="2" fill="#FFC107"/>
+  <rect x="60" y="47" width="2" height="4" fill="#FFC107"/>
+</svg>

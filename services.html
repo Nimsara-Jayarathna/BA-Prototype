@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Services</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      padding: 16px;
+    }
+    p {
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
+    .toggle-buttons {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .toggle-buttons button {
+      flex: 1;
+      padding: 10px;
+      border-radius: 10px;
+      font-weight: bold;
+      font-size: 15px;
+      cursor: pointer;
+    }
+    .active {
+      background: #1a73e8;
+      color: white;
+      border: none;
+    }
+    .inactive {
+      background: white;
+      color: #1a73e8;
+      border: 2px solid #1a73e8;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+    .card {
+      background: white;
+      border-radius: 12px;
+      text-align: center;
+      padding: 16px;
+      position: relative;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+    .card span {
+      position: absolute;
+      top: 8px;
+      right: 12px;
+      background: #1a73e8;
+      color: white;
+      padding: 2px 6px;
+      font-size: 12px;
+      border-radius: 10px;
+    }
+    .card img {
+      width: 50px;
+      margin-bottom: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <p>Select the product or services you need to explore.</p>
+
+    <div class="toggle-buttons">
+      <button class="inactive" onclick="window.location.href='products.html'">Products</button>
+      <button class="active">Services</button>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <span>2</span>
+        <img src="icons/vehicle-service.svg" alt="Vehicle Service">
+        <p>Vehicle Service</p>
+      </div>
+      <div class="card">
+        <span>0</span>
+        <img src="icons/vehicle-maintenance.svg" alt="Vehicle Maintenance">
+        <p>Vehicle Maintenance</p>
+      </div>
+      <div class="card">
+        <span>0</span>
+        <img src="icons/calibration.svg" alt="Calibration">
+        <p>Calibration</p>
+      </div>
+      <div class="card">
+        <span>0</span>
+        <img src="icons/payment.svg" alt="Payment Reminders">
+        <p>Payment Reminders</p>
+      </div>
+      <div class="card">
+        <span>0</span>
+        <img src="icons/medical.svg" alt="Medical Appointment">
+        <p>Medical Appointment</p>
+      </div>
+      <div class="card">
+        <span>2</span>
+        <img src="icons/rental.svg" alt="Rental">
+        <p>Rental</p>
+      </div>
+      <div class="card">
+        <span>0</span>
+        <img src="icons/education.svg" alt="Education Fees">
+        <p>Education Fees</p>
+      </div>
+      <div class="card">
+        <span>0</span>
+        <img src="icons/home.svg" alt="Home Needs & Other">
+        <p>Home Needs & Other</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
