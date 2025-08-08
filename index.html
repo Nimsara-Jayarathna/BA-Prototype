@@ -104,6 +104,10 @@
       <div>⋯</div>
     </div>
   </header>
+  <button id="install-btn" style="display:none; padding: 10px 16px; border-radius: 8px; background: #1a73e8; color: white; font-weight: bold;">
+  Install App
+</button>
+
 
   <!-- Content Frame -->
   <iframe id="main-frame" src="home.html"></iframe>
@@ -139,5 +143,35 @@
     navigator.serviceWorker.register('/Headsup/sw.js');
   }
 </script>
+  <script>
+  let deferredPrompt;
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    // Prevent Chrome's mini-infobar from appearing
+    e.preventDefault();
+    deferredPrompt = e;
+
+    // Show your custom install button
+    const installBtn = document.getElementById('install-btn');
+    installBtn.style.display = 'inline-block';
+
+    installBtn.addEventListener('click', () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt(); // Show the native install prompt
+
+        deferredPrompt.userChoice.then((choiceResult) => {
+          if (choiceResult.outcome === 'accepted') {
+            console.log('User accepted the install prompt');
+          } else {
+            console.log('User dismissed the install prompt');
+          }
+          deferredPrompt = null;
+        });
+      }
+    });
+  });
+</script>
+
 </body>
 </html>
+
