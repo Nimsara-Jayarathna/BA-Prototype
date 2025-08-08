@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="manifest" href="/Headsup/manifest.json">
   <title>E Trust</title>
   <style>
     body {
@@ -133,5 +134,10 @@
       document.getElementById("main-frame").src = page;
     }
   </script>
+  <script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/Headsup/sw.js');
+  }
+</script>
 </body>
 </html>
