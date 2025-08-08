@@ -13,207 +13,114 @@
       --text-muted: #666;
       --radius: 12px;
       --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      --expired-color: #6c757d;
     }
 
     body {
-      margin: 0;
-      padding: 16px;
-      font-family: 'Segoe UI', sans-serif;
-      background: var(--light-gray);
-      color: var(--text-dark);
+      margin: 0; padding: 16px; font-family: 'Segoe UI', sans-serif;
+      background: var(--light-gray); color: var(--text-dark);
     }
 
-    h2 {
-      text-align: center;
-      margin-bottom: 4px;
-    }
-
-    .subtitle {
-      text-align: center;
-      font-size: 14px;
-      color: var(--text-muted);
-      margin-bottom: 16px;
-    }
-
-    .filter-buttons {
-      display: flex;
-      justify-content: center;
-      gap: 12px;
-      margin-bottom: 16px;
-      flex-wrap: wrap;
-      position: fixed;
-      bottom: 70px;
-      left: 0;
-      right: 0;
-      z-index: 20;
-    }
-
-    .filter-btn {
-      font-size: 14px;
-      padding: 8px 14px;
-      background: white;
-      border: 1px solid var(--gray);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      cursor: pointer;
-      position: relative;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      transition: background 0.2s ease;
-    }
-
-    .filter-btn:hover {
-      background: #e9e9e9;
-    }
-
-    .filter-remove {
-      font-size: 16px;
-      color: #999;
-      cursor: pointer;
-    }
+    h2 { text-align: center; margin-bottom: 4px; }
+    .subtitle { text-align: center; font-size: 14px; color: var(--text-muted); margin-bottom: 16px; }
 
     #headsup-list {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(45%, 1fr));
-      gap: 14px;
-      margin-top: 8px;
-      padding-bottom: 140px; /* space for floating filter buttons */
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(45%, 1fr));
+      gap: 14px; margin-top: 8px; padding-bottom: 140px;
     }
+
+    .empty-state {
+        text-align: center;
+        margin-top: 40px;
+        color: var(--text-muted);
+        /* === FIX: Ensure the empty state spans all columns === */
+        grid-column: 1 / -1; 
+    }
+    .empty-state h3 { margin-bottom: 8px; }
 
     .tile {
-      border-radius: var(--radius);
-      padding: 16px;
-      color: white;
-      font-weight: 500;
-      box-shadow: var(--shadow);
-      cursor: pointer;
-      transition: transform 0.15s ease;
+      border-radius: var(--radius); padding: 16px; color: white;
+      box-shadow: var(--shadow); cursor: pointer;
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      min-height: 80px; display: flex; flex-direction: column; justify-content: center;
+      overflow: hidden; 
     }
 
-    .tile:hover {
-      transform: scale(1.02);
+    .tile.expired { background: var(--expired-color) !important; }
+    .tile.tile-enter { opacity: 0; transform: scale(0.8); }
+    .tile:hover { transform: scale(1.03); }
+
+    .tile-title { font-size: 16px; font-weight: 600; }
+    .tile-type { font-size: 13px; font-weight: normal; opacity: 0.8; }
+    .tile-content { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 13px; }
+    .tile-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .tile-content .icon { font-size: 16px; flex-shrink: 0; }
+
+    .floating-action-btn {
+      position: fixed; bottom: 20px; height: 56px; border-radius: 28px;
+      box-shadow: var(--shadow); display: flex; align-items: center; justify-content: center;
+      padding: 0 20px; cursor: pointer; z-index: 50; font-size: 16px;
+      font-weight: 500; gap: 8px; transition: background-color 0.3s ease;
+    }
+    #add-btn { right: 20px; background: var(--primary); color: white; }
+    #add-btn .icon { font-size: 24px; }
+    #filter-btn { left: 20px; background: #f0f0f0; color: #333; }
+    #filter-btn.active { background: var(--primary); color: white; }
+
+    .modal, .view-modal, .filter-modal {
+      display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.4); justify-content: center; align-items: center;
+      z-index: 100; padding: 16px;
     }
 
-    .floating-btn {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      background: var(--primary);
-      color: white;
-      width: 56px;
-      height: 56px;
-      border-radius: 50%;
-      font-size: 30px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: var(--shadow);
-      cursor: pointer;
-      z-index: 50;
+    .modal-content, .view-content, .filter-content {
+      background: white; padding: 24px; border-radius: 20px; width: 90%;
+      max-width: 480px; max-height: 85vh; overflow-y: auto; box-shadow: var(--shadow);
+      position: relative; animation: fadeInUp 0.3s ease-out;
     }
 
-    .modal,
-    .view-modal,
-    .filter-modal {
-      display: none;
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0, 0, 0, 0.4);
-      justify-content: center;
-      align-items: center;
-      z-index: 100;
-      padding: 16px;
+    #filterOptions { display: flex; justify-content: center; flex-wrap: wrap; }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
+
+    .form-group { margin-bottom: 16px; }
+    .modal-content input, .modal-content select, .modal-content textarea {
+      width: 100%; padding: 14px 16px;
+      border-radius: var(--radius); border: 1px solid var(--gray);
+      font-size: 15px; background: #fefefe; box-sizing: border-box;
     }
 
-    .modal-content,
-    .view-content,
-    .filter-content {
-      background: white;
-      padding: 24px;
-      border-radius: 20px;
-      width: 90%;
-      max-width: 480px;
-      max-height: 85vh;
-      overflow-y: auto;
-      box-shadow: var(--shadow);
-      position: relative;
-      animation: fadeInUp 0.3s ease-out;
+    #birthdayFields { display: none; gap: 10px; }
+    
+    /* === FIX: New 3x2 Grid Layout for Chips === */
+    .chip-container {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    
+    .chip-selector {
+        padding: 8px 12px;
+        border-radius: var(--radius);
+        border: 1px solid var(--gray);
+        cursor: pointer;
+        font-size: 13px; /* Slightly smaller font to ensure fit */
+        transition: all 0.2s ease-in-out;
+        text-align: center;
+        white-space: nowrap; /* Prevent wrapping within the chip */
+    }
+    
+    .chip-selector.selected { background-color: var(--primary); color: white; border-color: var(--primary); }
+    .form-label { font-size: 14px; color: var(--text-muted); margin-bottom: 8px; display: block; }
+    
+    .modal-content button, .view-content button {
+      width: 100%; padding: 14px; background: var(--primary); color: white;
+      border: none; border-radius: 12px; cursor: pointer; font-size: 16px;
+      font-weight: 500; transition: background 0.2s ease; margin-top: 10px;
     }
 
-    @keyframes fadeInUp {
-      from {
-        opacity: 0;
-        transform: translateY(40px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    .modal-content input,
-    .modal-content select,
-    .modal-content textarea {
-      width: 100%;
-      margin-bottom: 16px;
-      padding: 14px 16px;
-      border-radius: var(--radius);
-      border: 1px solid var(--gray);
-      font-size: 15px;
-      background: #fefefe;
-    }
-
-    .modal-content button,
-    .view-content button {
-      width: 100%;
-      padding: 14px;
-      background: var(--primary);
-      color: white;
-      border: none;
-      border-radius: 12px;
-      cursor: pointer;
-      font-size: 16px;
-      font-weight: 500;
-      transition: background 0.2s ease;
-      margin-top: 10px;
-    }
-
-    .modal-content button:hover,
-    .view-content button:hover {
-      background: #1565c0;
-    }
-
-    .close-btn {
-      position: absolute;
-      top: 10px;
-      right: 14px;
-      font-size: 22px;
-      color: #999;
-      cursor: pointer;
-    }
-
-    .view-img {
-      width: 100%;
-      margin-top: 12px;
-      border-radius: 8px;
-      display: none;
-    }
-
-    .chip {
-      background: white;
-      padding: 8px 14px;
-      border-radius: var(--radius);
-      border: 1px solid var(--gray);
-      box-shadow: var(--shadow);
-      cursor: pointer;
-      margin: 6px;
-      display: inline-block;
-    }
-
-    .chip:hover {
-      background: #e0e0e0;
-    }
+    .close-btn { position: absolute; top: 10px; right: 14px; font-size: 22px; color: #999; cursor: pointer; }
+    .view-img { width: 100%; margin-top: 12px; border-radius: 8px; display: none; }
+    .chip { background: white; padding: 8px 14px; border-radius: var(--radius); border: 1px solid var(--gray); box-shadow: var(--shadow); cursor: pointer; margin: 6px; display: inline-block; }
   </style>
 </head>
 <body>
@@ -222,300 +129,177 @@
 
   <div id="headsup-list"></div>
 
-  <div class="filter-buttons">
-    <button id="filterTypeBtn" class="filter-btn" onclick="openFilterModal('type')">
-      <span id="typeLabel">Filter by Type</span>
-      <span id="typeRemove" class="filter-remove" onclick="removeFilter(event, 'type')" style="display: none;">✕</span>
-    </button>
-    <button id="filterDateBtn" class="filter-btn" onclick="openFilterModal('date')">
-      <span id="dateLabel">Filter by Date</span>
-      <span id="dateRemove" class="filter-remove" onclick="removeFilter(event, 'date')" style="display: none;">✕</span>
-    </button>
+  <div id="filter-btn" class="floating-action-btn" onclick="handleFilterButtonClick()">
+    <span class="icon">🔻</span><span class="text">Filter</span>
   </div>
-
-  <div class="floating-btn" onclick="openForm()">+</div>
-  <!-- Add Modal -->
+  <div id="add-btn" class="floating-action-btn" onclick="openNewForm()">
+    <span class="icon">+</span><span class="text">New</span>
+  </div>
+  
   <div id="modal" class="modal">
     <div class="modal-content">
       <div class="close-btn" onclick="closeForm()">×</div>
-      <h3>New HeadsUp</h3>
-      <select id="typeSelect" onchange="toggleCustomType()">
-        <option value="Birthday">Birthday</option>
-        <option value="Fees">Fees</option>
-        <option value="Exam">Exam</option>
-        <option value="Appointment">Appointment</option>
-        <option value="Vehicle">Vehicle</option>
-        <option value="Travel">Travel</option>
-        <option value="Custom">Custom...</option>
-      </select>
-      <input type="text" id="customType" placeholder="Enter custom type" style="display:none;" />
-      <input type="date" id="startDate" />
-      <input type="date" id="remindDate" />
-      <textarea id="remarks" placeholder="Remarks"></textarea>
-      <input type="file" id="photo" accept="image/*" />
+      <h3 id="formTitle">New HeadsUp</h3>
+      
+      <div class="form-group"><label class="form-label">Name</label><input type="text" id="nameInput" placeholder="e.g., Mom's Birthday" /></div>
+      <div class="form-group"><label class="form-label">Type</label><select id="typeSelect" onchange="handleTypeChange()"></select><input type="text" id="customType" placeholder="Enter custom type" style="display:none;" /></div>
+      <div id="eventDateContainer" class="form-group"><label class="form-label">Event Date</label><input type="date" id="eventDate" /></div>
+      <div id="birthdayFields" class="form-group"><div style="display: flex; gap: 10px;"><div style="flex: 2;"><label class="form-label">Month</label><select id="birthdayMonth"></select></div><div style="flex: 1;"><label class="form-label">Day</label><select id="birthdayDay"></select></div></div></div>
+      <div class="form-group"><label class="form-label">Remind Before</label><div id="remindChipContainer" class="chip-container"></div><input type="date" id="customRemindDate" style="display:none; margin-top: 8px;" /></div>
+      <div class="form-group"><label class="form-label">Remarks</label><textarea id="remarks" placeholder="Add some notes..."></textarea></div>
+      <div class="form-group"><label class="form-label">Photo (Optional)</label><input type="file" id="photo" accept="image/*" /></div>
+      
       <button onclick="saveHeadsUp()">Save HeadsUp</button>
     </div>
   </div>
 
-  <!-- View Modal -->
-  <div id="viewModal" class="view-modal">
-    <div class="view-content">
-      <div class="close-btn" onclick="closeView()">×</div>
-      <h3 id="viewTitle"></h3>
-      <p id="viewDates" style="font-size: 14px; color: #555;"></p>
-      <p id="viewRemarks" style="font-size: 14px; color: #333;"></p>
-      <img id="viewImage" class="view-img" />
-      <button onclick="editEntry()">Edit</button>
-      <button onclick="deleteEntry()">Delete</button>
-    </div>
-  </div>
+  <div id="viewModal" class="view-modal"><div class="view-content"><div class="close-btn" onclick="closeView()">×</div><h3 id="viewTitle"></h3><p id="viewEventDate" style="font-size: 14px; color: #555;"></p><p id="viewReminders" style="font-size: 14px; color: #555;"></p><p id="viewRemarks" style="font-size: 14px; color: #333;"></p><img id="viewImage" class="view-img" /><button onclick="editEntry()">Edit</button><button onclick="deleteEntry()">Delete</button></div></div>
+  <div id="filterModal" class="filter-modal"><div class="filter-content"><div class="close-btn" onclick="closeFilterModal()">×</div><h3>Filter By</h3><div id="filterOptions"></div></div></div>
 
-  <!-- Filter Modal -->
-  <div id="filterModal" class="filter-modal">
-    <div class="filter-content">
-      <div class="close-btn" onclick="closeFilterModal()">×</div>
-      <div id="filterOptions"></div>
-    </div>
-  </div>
-
-  <script>
-  const entries = [];
-  const predefinedColors = {
-    Birthday: '#AB47BC',
-    Fees: '#42A5F5',
-    Exam: '#FFA000',
-    Appointment: '#26C6DA',
-    Vehicle: '#5C6BC0',
-    Travel: '#26A69A'
-  };
+<script>
+  let entries = [];
+  const predefinedTypes = ['Birthday', 'Fees', 'Medical', 'Appointment', 'Vehicle', 'Travel'];
+  const reminderPresets = ['A month before', 'A week before', 'A day before', 'An hour before'];
+  const reminderOptions = ['✅ Select All', ...reminderPresets, 'Custom'];
+  const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  const predefinedColors = { Birthday: '#AB47BC', Fees: '#42A5F5', Medical: '#FFA000', Appointment: '#26C6DA', Vehicle: '#5C6BC0', Travel: '#26A69A' };
   const customColor = '#FF7043';
-  let currentFilterType = null;
-  let appliedFilters = { type: null, date: null };
-  let selectedViewIndex = -1;
+  let appliedFilter = null;
+  let editIndex = -1;
 
-  function openForm() {
-    document.getElementById('modal').style.display = 'flex';
-    document.getElementById('startDate').valueAsDate = new Date();
-  }
+  document.addEventListener('DOMContentLoaded', () => {
+    loadEntries();
+    initializeTypeDropdown();
+    initializeBirthdayFields();
+    initializeRemindChips();
+    renderEntries();
+    setInterval(updateAllTimers, 60000);
+  });
 
-  function closeForm() {
-    document.getElementById('modal').style.display = 'none';
-    clearFormFields();
-  }
-
-  function clearFormFields() {
-    document.getElementById('typeSelect').value = 'Birthday';
-    document.getElementById('customType').style.display = 'none';
-    document.getElementById('customType').value = '';
-    document.getElementById('remindDate').value = '';
-    document.getElementById('remarks').value = '';
-    document.getElementById('photo').value = '';
-  }
-
-  function toggleCustomType() {
-    document.getElementById('customType').style.display =
-      document.getElementById('typeSelect').value === 'Custom' ? 'block' : 'none';
-  }
-  function saveHeadsUp() {
-    const typeSelect = document.getElementById('typeSelect').value;
-    const customType = document.getElementById('customType').value;
-    const type = typeSelect === 'Custom' ? (customType || 'Custom') : typeSelect;
-    const startDate = document.getElementById('startDate').value;
-    const remindDate = document.getElementById('remindDate').value;
-    const remarks = document.getElementById('remarks').value;
-    const photoFile = document.getElementById('photo').files[0];
-
-    if (!type || !remindDate) return alert('Please fill all required fields');
-
-    const reader = new FileReader();
-    reader.onload = function () {
-      const imageUrl = photoFile ? reader.result : null;
-      const color = predefinedColors[type] || customColor;
-      entries.push({ type, startDate, remindDate, remarks, imageUrl, color });
-      renderEntries();
-      closeForm();
-    };
-
-    if (photoFile) reader.readAsDataURL(photoFile);
-    else reader.onload();
-  }
+  function saveEntries() { localStorage.setItem('headsupEntries', JSON.stringify(entries)); }
+  function loadEntries() { const d = localStorage.getItem('headsupEntries'); if (d) entries = JSON.parse(d); }
 
   function renderEntries() {
     const list = document.getElementById('headsup-list');
     list.innerHTML = '';
-    const now = new Date();
 
-    entries.forEach((entry, index) => {
-      if (appliedFilters.type && entry.type !== appliedFilters.type && !isCustomMatch(entry)) return;
+    if (entries.length === 0) {
+        list.innerHTML = `<div class="empty-state"><h3>Your HeadsUp list is empty.</h3><p>Tap the '+' button to add your first reminder!</p></div>`;
+        document.getElementById('filter-btn').classList.remove('active');
+        return;
+    }
 
-      if (appliedFilters.date) {
-        const remind = new Date(entry.remindDate);
-        const filterDate = appliedFilters.date;
-        if (typeof filterDate === 'string') {
-          const match = {
-            'Tomorrow': () => isSameDay(remind, addDays(now, 1)),
-            'This Week': () => isSameWeek(remind, now),
-            'Next Week': () => isSameWeek(remind, addDays(now, 7)),
-            'This Month': () => remind.getMonth() === now.getMonth() && remind.getFullYear() === now.getFullYear(),
-            'This Year': () => remind.getFullYear() === now.getFullYear()
-          }[filterDate];
-          if (!match || !match()) return;
-        } else if (filterDate instanceof Date) {
-          if (!isSameDay(remind, filterDate)) return;
-        }
-      }
-
-      const tile = document.createElement('div');
-      tile.className = 'tile';
-      tile.style.background = entry.color;
-      tile.innerHTML = `<div style="font-weight: bold;">${entry.type}</div>
-                        <div style="font-size: 13px;">Remind: ${new Date(entry.remindDate).toDateString()}</div>`;
-      tile.onclick = () => showDetail(entry, index);
-      list.appendChild(tile);
+    const filteredEntries = entries.filter(entry => {
+        if (!appliedFilter) return true;
+        if (appliedFilter === 'Show Expired Only') return isExpired(entry);
+        return entry.type === appliedFilter;
     });
-  }
 
-  function isCustomMatch(entry) {
-    return appliedFilters.type === 'Custom' && !(entry.type in predefinedColors);
-  }
-
-  function showDetail(entry, index) {
-    selectedViewIndex = index;
-    document.getElementById('viewTitle').textContent = entry.type;
-    document.getElementById('viewDates').innerHTML = `Start: ${new Date(entry.startDate).toDateString()}<br/>Remind: ${new Date(entry.remindDate).toDateString()}`;
-    document.getElementById('viewRemarks').textContent = entry.remarks;
-    const img = document.getElementById('viewImage');
-    if (entry.imageUrl) {
-      img.src = entry.imageUrl;
-      img.style.display = 'block';
-    } else {
-      img.style.display = 'none';
+    if (filteredEntries.length === 0 && appliedFilter) {
+         list.innerHTML = `<div class="empty-state"><h3>No entries match your filter.</h3><p>Tap the Filter button again to clear it.</p></div>`;
     }
-    document.getElementById('viewModal').style.display = 'flex';
+
+    filteredEntries.forEach((entry) => {
+        const originalIndex = entries.indexOf(entry);
+        const tile = document.createElement('div');
+        const expired = isExpired(entry);
+        tile.className = `tile ${expired ? 'expired' : ''} tile-enter`;
+        tile.style.background = entry.color;
+        tile.dataset.index = originalIndex;
+        
+        tile.innerHTML = `
+            <div class="tile-title tile-text">${entry.name} <span class="tile-type">(${entry.type})</span></div>
+            <div class="tile-content">
+                <span class="icon">📅</span>
+                <span class="tile-text" id="event-date-${originalIndex}"></span>
+            </div>
+            <div class="tile-content" id="reminder-container-${originalIndex}"></div>
+        `;
+        tile.onclick = () => showDetail(entry, originalIndex);
+        list.appendChild(tile);
+    });
+    
+    updateAllTimers();
+    setTimeout(() => { document.querySelectorAll('.tile-enter').forEach(el => el.classList.remove('tile-enter')); }, 10);
+    document.getElementById('filter-btn').classList.toggle('active', !!appliedFilter);
   }
 
-  function closeView() {
-    document.getElementById('viewModal').style.display = 'none';
-  }
+  function updateAllTimers() {
+      document.querySelectorAll('.tile').forEach(tile => {
+        const index = tile.dataset.index;
+        const entry = entries[index];
+        if (!entry) return;
 
-  function editEntry() {
-    if (selectedViewIndex === -1) return;
-
-    const entry = entries[selectedViewIndex];
-    document.getElementById('typeSelect').value = predefinedColors[entry.type] ? entry.type : 'Custom';
-    toggleCustomType();
-    if (!(entry.type in predefinedColors)) document.getElementById('customType').value = entry.type;
-    document.getElementById('startDate').value = entry.startDate;
-    document.getElementById('remindDate').value = entry.remindDate;
-    document.getElementById('remarks').value = entry.remarks;
-    document.getElementById('photo').value = '';
-    entries.splice(selectedViewIndex, 1);
-    selectedViewIndex = -1;
-    closeView();
-    openForm();
-  }
-
-  function deleteEntry() {
-    if (selectedViewIndex === -1) return;
-    entries.splice(selectedViewIndex, 1);
-    selectedViewIndex = -1;
-    renderEntries();
-    closeView();
-  }
-
-  function openFilterModal(type) {
-    currentFilterType = type;
-    const modal = document.getElementById('filterModal');
-    const options = document.getElementById('filterOptions');
-    options.innerHTML = '';
-
-    if (type === 'type') {
-      ['Birthday', 'Fees', 'Exam', 'Appointment', 'Vehicle', 'Travel', 'Custom'].forEach(label => {
-        const btn = document.createElement('button');
-        btn.className = 'chip';
-        btn.textContent = label;
-        btn.onclick = () => {
-          applyFilter(type, label);
-          closeFilterModal();
-        };
-        options.appendChild(btn);
+        document.getElementById(`event-date-${index}`).textContent = `Event: ${formatShortDate(getEventDate(entry))}`;
+        const reminderContainer = document.getElementById(`reminder-container-${index}`);
+        
+        if (isExpired(entry)) {
+            tile.classList.add('expired');
+            reminderContainer.innerHTML = `<span class="tile-text">This event has passed</span>`;
+        } else {
+            reminderContainer.innerHTML = `<span class="icon">🔔</span><span class="tile-text">Reminds: ${formatCountdown(getNextReminder(entry))}</span>`;
+        }
       });
-    } else {
-      ['Tomorrow', 'This Week', 'Next Week', 'This Month', 'This Year', 'Custom Date'].forEach(label => {
-        const btn = document.createElement('button');
-        btn.className = 'chip';
-        btn.textContent = label;
-        btn.onclick = () => {
-          if (label === 'Custom Date') {
-            const input = prompt('Enter date (YYYY-MM-DD):');
-            const date = new Date(input);
-            if (!isNaN(date)) {
-              applyFilter(type, date);
-              closeFilterModal();
-            }
-          } else {
-            applyFilter(type, label);
-            closeFilterModal();
-          }
-        };
-        options.appendChild(btn);
-      });
-    }
-
-    modal.style.display = 'flex';
   }
 
-  function closeFilterModal() {
-    document.getElementById('filterModal').style.display = 'none';
+  function saveHeadsUp() {
+    const name = document.getElementById('nameInput').value.trim();
+    if (!name) return alert('Please enter a name for the entry.');
+    let type = document.getElementById('typeSelect').value;
+    const customType = document.getElementById('customType').value.trim();
+    if (type === 'Custom') type = customType || 'Custom';
+    if (!type) return alert('Please select a type.');
+
+    let eventData;
+    if (type === 'Birthday') eventData = { month: document.getElementById('birthdayMonth').value, day: document.getElementById('birthdayDay').value };
+    else { eventData = document.getElementById('eventDate').value; if (!eventData) return alert('Please select an event date.'); }
+
+    const reminders = [];
+    document.querySelectorAll('#remindChipContainer .chip-selector.selected').forEach(c => {
+      const val = c.dataset.value;
+      if (val === 'Custom') { const d = document.getElementById('customRemindDate').value; if (d) reminders.push(d); } 
+      else if (val !== '✅ Select All') reminders.push(val);
+    });
+    if (reminders.length === 0) return alert('Please select at least one reminder option.');
+    
+    const reader = new FileReader();
+    reader.onload = function () {
+      const newEntry = { name, type, eventData, reminders, remarks: document.getElementById('remarks').value, imageUrl: document.getElementById('photo').files[0] ? reader.result : null, color: predefinedColors[type] || customColor };
+      if (editIndex > -1) entries[editIndex] = newEntry;
+      else entries.push(newEntry);
+      saveEntries(); renderEntries(); closeForm();
+    };
+    if (document.getElementById('photo').files[0]) reader.readAsDataURL(document.getElementById('photo').files[0]);
+    else reader.onload();
+  }
+  
+  function handleFilterButtonClick() {
+      if (appliedFilter) removeFilter();
+      else openFilterModal();
   }
 
-  function applyFilter(type, value) {
-    appliedFilters[type] = value;
-    if (type === 'type') {
-      document.getElementById('typeLabel').textContent = value;
-      document.getElementById('typeRemove').style.display = 'inline';
-    } else {
-      document.getElementById('dateLabel').textContent = value instanceof Date
-        ? value.toISOString().split('T')[0]
-        : value;
-      document.getElementById('dateRemove').style.display = 'inline';
-    }
-    renderEntries();
-  }
-
-  function removeFilter(event, type) {
-    event.stopPropagation();
-    appliedFilters[type] = null;
-    if (type === 'type') {
-      document.getElementById('typeLabel').textContent = 'Filter by Type';
-      document.getElementById('typeRemove').style.display = 'none';
-    } else {
-      document.getElementById('dateLabel').textContent = 'Filter by Date';
-      document.getElementById('dateRemove').style.display = 'none';
-    }
-    renderEntries();
-  }
-
-  // Helpers
-  function addDays(date, days) {
-    const result = new Date(date);
-    result.setDate(result.getDate() + days);
-    return result;
-  }
-
-  function isSameDay(d1, d2) {
-    return d1.getDate() === d2.getDate() &&
-           d1.getMonth() === d2.getMonth() &&
-           d1.getFullYear() === d2.getFullYear();
-  }
-
-  function isSameWeek(d1, d2) {
-    const startOfWeek = new Date(d2);
-    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
-    const endOfWeek = new Date(startOfWeek);
-    endOfWeek.setDate(endOfWeek.getDate() + 6);
-    return d1 >= startOfWeek && d1 <= endOfWeek;
-  }
-  </script>
+  const getEventDate=(e)=>e.type==='Birthday'?getNextBirthday(e.eventData.month,e.eventData.day):new Date(e.eventData+'T00:00:00');
+  const getNextBirthday=(m,d)=>{const t=new Date(),y=t.getFullYear();let b=new Date(y,m,d,23,59,59);return b<t?new Date(y+1,m,d,23,59,59):b};
+  const isExpired=(e)=>getEventDate(e)<new Date();
+  const formatShortDate=(d)=>d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  const formatCountdown=(d)=>{if(!d)return'N/A';const s=Math.max(0,Math.round((d.getTime()-new Date().getTime())/1e3)),a=Math.floor(s/86400),h=Math.floor(s%86400/3600),m=Math.floor(s%3600/60);return a>0?`${a}d ${h}h`:h>0?`${h}h ${m}m`:`${m}m`};
+  const calculateReminderDates=(e)=>{const d=getEventDate(e);return e.reminders.map(r=>{const n=new Date(d);switch(r){case'A month before':n.setMonth(n.getMonth()-1);break;case'A week before':n.setDate(n.getDate()-7);break;case'A day before':n.setDate(n.getDate()-1);break;case'An hour before':n.setHours(n.getHours()-1);break;default:return new Date(r+'T00:00:00')}return n}).filter(d=>d&&!isNaN(d))};
+  const getNextReminder=e=>calculateReminderDates(e).filter(d=>d>new Date()).sort((a,b)=>a-b)[0]||null;
+  const initializeTypeDropdown=()=>{const e=document.getElementById("typeSelect");e.innerHTML='<option value="" disabled selected>Select a type</option>',[...predefinedTypes,"Custom"].forEach(t=>{e.innerHTML+=`<option value="${t}">${t}</option>`})};
+  const initializeBirthdayFields=()=>{const e=document.getElementById("birthdayMonth");months.forEach((t,n)=>{e.innerHTML+=`<option value="${n}">${t}</option>`});const t=document.getElementById("birthdayDay");for(let n=1;n<=31;n++)t.innerHTML+=`<option value="${n}">${n}</option>`};
+  const initializeRemindChips=()=>{const e=document.getElementById("remindChipContainer");e.innerHTML="",reminderOptions.forEach(t=>{const n=document.createElement("div");n.className="chip-selector",n.textContent=t,n.dataset.value=t,n.onclick=()=>selectReminder(t,n),e.appendChild(n)})};
+  const handleTypeChange=()=>{const e=document.getElementById("typeSelect").value;document.getElementById("customType").style.display="Custom"===e?"block":"none",document.getElementById("birthdayFields").style.display="Birthday"===e?"flex":"none",document.getElementById("eventDateContainer").style.display="Birthday"===e?"none":"block"};
+  const selectReminder=(e,t)=>{if("✅ Select All"===e){const n=t.classList.toggle("selected");return void document.querySelectorAll("#remindChipContainer .chip-selector").forEach(e=>{reminderPresets.includes(e.dataset.value)&&e.classList.toggle("selected",n)})}t.classList.toggle("selected"),"Custom"===e&&(document.getElementById("customRemindDate").style.display=t.classList.contains("selected")?"block":"none")};
+  const openNewForm=()=>{editIndex=-1;openForm()};const openForm=()=>{document.getElementById("formTitle").textContent=editIndex>-1?"Edit HeadsUp":"New HeadsUp",document.getElementById("modal").style.display="flex"};
+  const closeForm=()=>{document.getElementById("modal").style.display="none",clearFormFields()};
+  const clearFormFields=()=>{document.getElementById("nameInput").value='';document.getElementById("typeSelect").value="",document.querySelectorAll(".chip-selector.selected").forEach(e=>e.classList.remove("selected")),document.getElementById("customType").value="",document.getElementById("eventDate").value="",document.getElementById("remarks").value="",document.getElementById("photo").value="",document.getElementById("customRemindDate").value="",handleTypeChange(),editIndex=-1};
+  const openFilterModal=()=>{const e=document.getElementById("filterOptions");e.innerHTML="",[...predefinedTypes,"Custom","Show Expired Only"].forEach(t=>{const n=document.createElement("button");n.className="chip",n.textContent=t,n.onclick=()=>{applyFilter(t),closeFilterModal()},e.appendChild(n)}),document.getElementById("filterModal").style.display="flex"};
+  const applyFilter=e=>{appliedFilter=e,renderEntries()};const removeFilter=()=>{appliedFilter=null,renderEntries(),closeFilterModal()};
+  const showDetail=(e,t)=>{editIndex=t,document.getElementById("viewTitle").textContent=e.name;let n=`<b>Event Date:</b> ${formatShortDate(getEventDate(e))}`;document.getElementById("viewEventDate").innerHTML=n;let o="<b>Reminders Set:</b><ul>";e.reminders.forEach(e=>{o+=`<li>${e.includes("-")?formatShortDate(new Date(e+"T00:00:00")):e}</li>`}),document.getElementById("viewReminders").innerHTML=o+"</ul>",document.getElementById("viewRemarks").textContent=e.remarks;const a=document.getElementById("viewImage");a.style.display=e.imageUrl?"block":"none",e.imageUrl&&(a.src=e.imageUrl),document.getElementById("viewModal").style.display="flex"};
+  const closeView=()=>{document.getElementById("viewModal").style.display="none"};
+  const closeFilterModal=()=>{document.getElementById("filterModal").style.display="none"};
+  const deleteEntry=()=>{if(editIndex>-1&&confirm("Are you sure?"))entries.splice(editIndex,1),saveEntries(),renderEntries(),closeView()};
+  const editEntry=()=>{if(-1===editIndex)return;const e=entries[editIndex];closeView(),openForm(),document.getElementById("nameInput").value=e.name,document.getElementById("typeSelect").value=predefinedTypes.includes(e.type)?e.type:"Custom",handleTypeChange(),predefinedTypes.includes(e.type)||(document.getElementById("customType").value=e.type),"Birthday"===e.type?(document.getElementById("birthdayMonth").value=e.eventData.month,document.getElementById("birthdayDay").value=e.eventData.day):document.getElementById("eventDate").value=e.eventData,document.getElementById("remarks").value=e.remarks,e.reminders.forEach(t=>{const n=document.querySelector(`#remindChipContainer .chip-selector[data-value="${reminderOptions.includes(t)?t:"Custom"}"]`);n&&(n.classList.add("selected"),reminderOptions.includes(t)||(document.getElementById("customRemindDate").style.display="block",document.getElementById("customRemindDate").value=t))})};
+</script>
 </body>
 </html>
