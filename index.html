@@ -86,6 +86,43 @@
       height: calc(100vh - 112px); /* header + bottom nav */
       border: none;
     }
+
+    /* --- NEW STYLES FOR DROPDOWN MENU --- */
+    .menu-container {
+      position: relative; /* This is crucial for positioning the dropdown */
+    }
+    #menu-toggle {
+      cursor: pointer;
+      font-size: 24px;
+      font-weight: bold;
+      line-height: 1;
+    }
+    #dropdown-menu {
+      display: none; /* Hidden by default */
+      position: absolute;
+      top: 30px; /* Position below the dots */
+      right: 0;
+      background-color: white;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      z-index: 100;
+      width: 160px; /* Set a width for the menu */
+    }
+    #dropdown-menu a {
+      display: block;
+      padding: 12px 16px;
+      text-decoration: none;
+      color: #333;
+      font-size: 14px;
+    }
+    #dropdown-menu a:hover {
+      background-color: #f5f5f5;
+    }
+    #dropdown-menu.show {
+      display: block; /* Class to make the menu visible */
+    }
+    /* --- END OF NEW STYLES --- */
   </style>
 </head>
 <body>
@@ -101,13 +138,20 @@
     </div>
     <div class="right-header">
       <div class="bell">🔔<span>11</span></div>
-      <div>⋯</div>
+      <!-- MODIFIED: Container for menu and toggle button -->
+      <div class="menu-container">
+        <div id="menu-toggle">⋯</div>
+        <!-- NEW: The dropdown menu itself -->
+        <div id="dropdown-menu">
+            <a href="#" id="profile-link">Profile Settings</a>
+            <a href="#" id="logout-link">Log Out</a>
+        </div>
+      </div>
     </div>
   </header>
   <button id="install-btn" style="display:none; padding: 10px 16px; border-radius: 8px; background: #1a73e8; color: white; font-weight: bold;">
   Install App
 </button>
-
 
   <!-- Content Frame -->
   <iframe id="main-frame" src="home.html"></iframe>
@@ -127,16 +171,50 @@
       Saved
     </div>
     <div onclick="loadTab('headsup.html')">
-  <span>🔔</span>
-  HeadsUp
-</div>
-
+      <span>🔔</span>
+      HeadsUp
+    </div>
   </div>
 
   <script>
     function loadTab(page) {
       document.getElementById("main-frame").src = page;
     }
+
+    // --- NEW JAVASCRIPT FOR DROPDOWN MENU ---
+
+    const menuToggle = document.getElementById('menu-toggle');
+    const dropdownMenu = document.getElementById('dropdown-menu');
+    const profileLink = document.getElementById('profile-link');
+    const logoutLink = document.getElementById('logout-link');
+
+    // Toggle menu visibility when clicking the three dots
+    menuToggle.addEventListener('click', function(event) {
+        event.stopPropagation(); // Prevents the window click event from firing immediately
+        dropdownMenu.classList.toggle('show');
+    });
+
+    // Handle "Profile Settings" click
+    profileLink.addEventListener('click', function(event) {
+        event.preventDefault(); // Prevent default link behavior
+        loadTab('profile.html');
+        dropdownMenu.classList.remove('show'); // Hide the menu after clicking
+    });
+
+    // Handle "Log Out" click
+    logoutLink.addEventListener('click', function(event) {
+        event.preventDefault();
+        alert('Log Out clicked!'); // Placeholder for actual logout logic
+        dropdownMenu.classList.remove('show'); // Hide the menu
+    });
+
+    // Hide the menu if user clicks anywhere else on the page
+    window.addEventListener('click', function() {
+        if (dropdownMenu.classList.contains('show')) {
+            dropdownMenu.classList.remove('show');
+        }
+    });
+
   </script>
   <script>
   if ('serviceWorker' in navigator) {
@@ -174,4 +252,3 @@
 
 </body>
 </html>
-
