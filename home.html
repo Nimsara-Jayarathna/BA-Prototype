@@ -1,89 +1,577 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Home</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f9f9f9;
-      margin: 0;
-      padding: 0;
-    }
-    .container {
-      padding: 16px;
-    }
-    p {
-      color: #666;
-      font-size: 14px;
-      margin-bottom: 16px;
-    }
-    .toggle-buttons {
-      display: flex;
-      gap: 12px;
-      margin-bottom: 24px;
-    }
-    .toggle-buttons button {
-      flex: 1;
-      padding: 10px;
-      border-radius: 10px;
-      font-weight: bold;
-      font-size: 15px;
-      cursor: pointer;
-    }
-    .products-btn {
-      background: #1a73e8;
-      color: white;
-      border: none;
-    }
-    .services-btn {
-      background: white;
-      color: #1a73e8;
-      border: 2px solid #1a73e8;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f9f9f9;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            padding: 16px;
+        }
+
+        p {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 16px;
+        }
+
+        .toggle-buttons {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .toggle-buttons button {
+            flex: 1;
+            padding: 10px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 15px;
+            cursor: pointer;
+        }
+
+        .products-btn {
+            background: #1a73e8;
+            color: white;
+            border: none;
+        }
+
+        .services-btn {
+            background: white;
+            color: #1a73e8;
+            border: 2px solid #1a73e8;
+        }
+
+        /* Warranty Card Styles */
+        .warranty-card {
+            background: #213555;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .warranty-card.needs-edits {
+            background: #FF8A80;
+            /* Light Red */
+        }
+
+        .warranty-card.needs-edits .warranty-card-content {
+            opacity: 0.8;
+            /* Indicate it's in a different state */
+        }
+
+
+        .warranty-card-content {
+            padding: 16px;
+        }
+
+        .warranty-card h4 {
+            margin: 0 0 8px;
+            font-size: 18px;
+        }
+
+        .warranty-card p {
+            font-size: 14px;
+            color: #ddd;
+            margin-bottom: 4px;
+        }
+
+        .warranty-period {
+            margin-top: 12px;
+            font-size: 14px;
+        }
+
+        .warranty-period span {
+            font-weight: bold;
+        }
+
+        .remaining-period {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 8px;
+            font-size: 12px;
+            color: #ddd;
+        }
+
+        .remaining-period .progress-bar {
+            width: 70%;
+            height: 8px;
+            background: #4F709A;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .remaining-period .progress {
+            background: #6D8EAD;
+            height: 100%;
+        }
+
+        .remaining-period .days-left {
+            width: 25%;
+            text-align: right;
+        }
+
+        /* Style for the warranty details overlay */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            /* Semi-transparent background */
+            display: none;
+            /* Hidden by default */
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            /* Ensure it's on top */
+        }
+
+        .warranty-details {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            width: 80%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .warranty-details h2 {
+            margin-top: 0;
+            color: #333;
+        }
+
+        .warranty-details p {
+            color: #666;
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+
+        .warranty-details button {
+            padding: 10px 15px;
+            margin-top: 10px;
+            border: none;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .action-buttons {
+            margin-top: 15px;
+        }
+
+        .accept-button {
+            background-color: #4CAF50;
+            margin-right: 10px;
+        }
+
+        .reject-button {
+            background-color: #f44336;
+        }
+
+        /* Style for Accept Confirmation */
+        #acceptConfirmation,
+        #rejectConfirmation {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            z-index: 1001;
+            text-align: center;
+            width: 80%;
+            /* Adjust the width as needed */
+            max-width: 500px;
+            /* Maximum width */
+        }
+
+        #acceptConfirmation button,
+        #rejectConfirmation button {
+            padding: 8px 12px;
+            margin: 5px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        #acceptConfirmation .yes-button,
+        #rejectConfirmation .yes-button {
+            background-color: #1a73e8;
+            color: white;
+        }
+
+        #acceptConfirmation .no-button,
+        #rejectConfirmation .no-button {
+            background-color: #ddd;
+            color: #333;
+        }
+
+        /* Style for the overlay to block the background */
+        .confirmation-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            /* Semi-transparent background */
+            display: none;
+            /* Hidden by default */
+            z-index: 1000;
+            /* Lower than the popup, but above other content */
+        }
+
+        .warranty-details-block {
+            background-color: #f0f0f0;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .warranty-details-block h4 {
+            margin-top: 0;
+            color: #333;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .warranty-details-block p {
+            color: #666;
+            margin: 0;
+            font-size: 15px;
+        }
+
+        #contactSellerMessage {
+            text-align: center;
+            padding: 20px;
+            background-color: #fff0f0;
+            border: 1px solid #f44336;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        #contactSellerMessage p {
+            color: #333;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        #contactSellerMessage .seller-info {
+            font-weight: bold;
+            color: #1a73e8;
+        }
+    </style>
 </head>
+
 <body>
-  <div class="container">
-    <p>Select the product or services you need to explore.</p>
+    <div class="confirmation-overlay" id="confirmationOverlay"></div>
+    <div class="container">
+        <p>Select the product or services you need to explore.</p>
 
-    <!-- Toggle Buttons -->
-    <div class="toggle-buttons">
-      <button class="products-btn" onclick="window.location.href='products.html'">Products</button>
-      <button class="services-btn" onclick="window.location.href='services.html'">Services</button>
+        <!-- Toggle Buttons -->
+        <div class="toggle-buttons">
+            <button class="products-btn" onclick="window.location.href='products.html'">Products</button>
+            <button class="services-btn" onclick="window.location.href='services.html'">Services</button>
+        </div>
+
+        <!-- Pending/Awaiting Review Warranties Section -->
+        <h3 style="margin-bottom: 12px;">Pending Warranties</h3>
+        <p id="no-warranties-message" style="display:none;">No warranties are awaiting review.</p>
+        <div id="warranties-container">
+            <!-- Warranty cards will be dynamically added here -->
+        </div>
+
+        <!-- Warranty Details Overlay -->
+        <div class="overlay" id="warrantyOverlay">
+            <div class="warranty-details">
+                <div class="warranty-details-block">
+                    <h2 id="detail-title">Sony TV</h2>
+                    <p id="detail-seller">Thikalawardhana Texttiles</p>
+                    <p id="detail-days-left" style="font-weight: bold; color: #333;">95 Days Left</p>
+                    <p id="detail-sn">SN: 88550245663</p>
+                </div>
+                <div class="warranty-details-block">
+                    <h4>Purchase Date</h4>
+                    <p id="detail-purchase-date">2024-04-25</p>
+                </div>
+                <div class="warranty-details-block">
+                    <h4>Expiry Date</h4>
+                    <p id="detail-expiry-date">2025-04-25</p>
+                </div>
+                 <div class="warranty-details-block">
+                    <h4>Warranty Period</h4>
+                    <p id="detail-warranty-period">3 Years</p>
+                </div>
+                <div class="warranty-details-block">
+                    <h4>Customer</h4>
+                    <p id="detail-customer-info">
+                    </p>
+                </div>
+                <div class="warranty-details-block">
+                    <h4>Shop</h4>
+                    <p id="detail-shop-info">
+                    </p>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="accept-button" onclick="showAcceptConfirmation()">Accept</button>
+                    <button class="reject-button" onclick="requestEdits()">Request Edits</button>
+                </div>
+
+                <div id="contactSellerMessage" style="display:none;">
+                    <p>Please contact the seller to correct the warranty details.</p>
+                    <p>Seller Contact: <span class="seller-info" id="sellerInfo"></span></p>
+                </div>
+
+                <button onclick="closeOverlay()" style="background-color: #aaa; width: 100%; margin-top: 15px;">Close</button>
+            </div>
+        </div>
+
+        <!-- Accept Confirmation Popup -->
+        <div class="confirmation-overlay" id="acceptConfirmationOverlay"></div>
+        <div id="acceptConfirmation">
+            <p>Accept this warranty?</p>
+            <button class="yes-button" onclick="acceptWarrantyConfirmed()">Yes</button>
+            <button class="no-button" onclick="closeAcceptConfirmation()">No</button>
+            <label>
+                <input type="checkbox" id="dontShowAgainAccept"> Don't show this message again.
+            </label>
+        </div>
+
+        <!-- Reject Confirmation Popup (Now Request Edits Confirmation) -->
+        <div class="confirmation-overlay" id="rejectConfirmationOverlay"></div>
+        <div id="rejectConfirmation">
+            <p>By requesting edits, you acknowledge the responsibility to contact the seller to ensure the correct details are provided. Please note that the 7-day auto-accept timer will not be paused. Do you wish to proceed?</p>
+            <button class="yes-button" onclick="requestEditsConfirmed()">Yes</button>
+            <button class="no-button" onclick="closeRejectConfirmation()">No</button>
+        </div>
     </div>
 
-    <!-- Promotions Section -->
-    <h3 style="margin-bottom: 12px;">Promotions</h3>
+    <script>
+        // Warranty Data (Replace with your actual data)
+        let warranties = [{
+            id: 1,
+            title: 'Sony TV',
+            seller: 'Thilakawardhana Textile',
+            daysSinceAssigned: 5,
+            sellerContact: '066-1234567',
+            purchaseDate: '2024-04-25',
+            expiryDate: '2027-04-24',
+            warrantyPeriod: '3 Years',
+            serialNumber: '88550245663',
+            customerName: 'Chamara Saumsyri Kudagama',
+            customerAddress: 'Thirappane',
+            customerPhone: '0716283335',
+            customerID: 'ID 022131',
+            shopName: 'Thilakawardana',
+            shopAddress: '20/5 Main Street, Matale',
+            shopPhone: '071627722',
+            shopOtherPhone: '0661777777',
+            needsEdits: false
+        }, {
+            id: 2,
+            title: 'Headphones',
+            seller: 'CIB Shopping Center',
+            daysSinceAssigned: 2,
+            sellerContact: '077-9876543',
+            purchaseDate: '2024-05-10',
+            expiryDate: '2025-05-09',
+            warrantyPeriod: '1 Year',
+            serialNumber: 'HP-AUDIO-9912',
+            customerName: 'Nimal Perera',
+            customerAddress: 'Kandy',
+            customerPhone: '0771234567',
+            customerID: 'ID 987654',
+            shopName: 'CIB Main Branch',
+            shopAddress: '10 King Street, Kandy',
+            shopPhone: '0812345678',
+            shopOtherPhone: '',
+            needsEdits: false
+        }, ];
 
-    <!-- Promotion Card 1 -->
-    <div style="background: white; border-radius: 12px; margin-bottom: 16px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); overflow: hidden;">
-      <img src="1.jpg" alt="New Year Sale" style="width: 100%; display: block;" />
-      <div style="padding: 12px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 14px;">
-          <strong>Berry Berry</strong>
-          <span style="font-size: 18px;">🔖</span>
-        </div>
-        <h4 style="margin: 8px 0 8px;">New Year Sale</h4>
-        <div style="font-size: 13px; color: #666; display: flex; justify-content: space-between;">
-          <span>Ends on 01/20/2026</span>
-          <span>171 days left</span>
-        </div>
-      </div>
-    </div>
+        let warrantyTimers = {};
+        let showConfirmationAccept = true;
+        let selectedWarrantyId = null;
 
-    <!-- Promotion Card 2 -->
-    <div style="background: white; border-radius: 12px; margin-bottom: 16px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); overflow: hidden;">
-      <img src="1.jpg" alt="Deal" style="width: 100%; display: block;" />
-      <div style="padding: 12px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 14px;">
-          <strong>Cards</strong>
-          <span style="font-size: 18px;">🔖</span>
-        </div>
-        <h4 style="margin: 8px 0 0;">Deal</h4>
-      </div>
-    </div>
-  </div>
+        function showWarrantyDetails(warrantyId) {
+            selectedWarrantyId = warrantyId;
+            const warranty = warranties.find(w => w.id === warrantyId);
+
+            if (warranty) {
+                // --- CALCULATE DAYS LEFT ---
+                const today = new Date();
+                const expiry = new Date(warranty.expiryDate);
+                const timeDiff = expiry.getTime() - today.getTime();
+                const daysLeft = Math.ceil(timeDiff / (1000 * 3600 * 24));
+                const daysLeftText = daysLeft > 0 ? `${daysLeft} Days Left` : 'Expired';
+
+                // --- DYNAMICALLY POPULATE OVERLAY DATA ---
+                document.getElementById('detail-title').innerText = warranty.title;
+                document.getElementById('detail-seller').innerText = warranty.seller;
+                document.getElementById('detail-days-left').innerText = daysLeftText;
+                document.getElementById('detail-sn').innerText = `SN: ${warranty.serialNumber}`;
+                document.getElementById('detail-purchase-date').innerText = warranty.purchaseDate;
+                document.getElementById('detail-expiry-date').innerText = warranty.expiryDate;
+                document.getElementById('detail-warranty-period').innerText = warranty.warrantyPeriod;
+                document.getElementById('detail-customer-info').innerHTML = `${warranty.customerName}<br>${warranty.customerAddress}<br>${warranty.customerPhone}<br>${warranty.customerID}`;
+                document.getElementById('detail-shop-info').innerHTML = `${warranty.shopName}<br>${warranty.shopAddress}<br>${warranty.shopPhone} ${warranty.shopOtherPhone}`;
+                document.getElementById('sellerInfo').innerText = warranty.sellerContact;
+
+                const actionButtons = document.querySelector('.action-buttons');
+                const contactMessage = document.getElementById('contactSellerMessage');
+
+                // --- CONDITIONALLY SHOW/HIDE ELEMENTS ---
+                if (warranty.needsEdits) {
+                    actionButtons.style.display = 'none';
+                    contactMessage.style.display = 'block';
+                } else {
+                    actionButtons.style.display = 'block';
+                    contactMessage.style.display = 'none';
+                }
+
+                document.getElementById('warrantyOverlay').style.display = 'flex';
+            }
+        }
+
+
+        function closeOverlay() {
+            document.getElementById('warrantyOverlay').style.display = 'none';
+            selectedWarrantyId = null;
+        }
+
+        function showAcceptConfirmation() {
+            document.getElementById('acceptConfirmationOverlay').style.display = 'block';
+            document.getElementById('acceptConfirmation').style.display = 'block';
+
+        }
+
+        function closeAcceptConfirmation() {
+            document.getElementById('acceptConfirmationOverlay').style.display = 'none';
+            document.getElementById('acceptConfirmation').style.display = 'none';
+
+        }
+
+        function acceptWarrantyConfirmed() {
+            const dontShowAgain = document.getElementById('dontShowAgainAccept').checked;
+            if (dontShowAgain) {
+                showConfirmationAccept = false;
+            }
+            document.getElementById('acceptConfirmationOverlay').style.display = 'none';
+            document.getElementById('acceptConfirmation').style.display = 'none';
+            if (selectedWarrantyId) {
+                warranties = warranties.filter(w => w.id !== selectedWarrantyId);
+                updateWarrantyDisplay();
+                closeOverlay();
+                clearTimeout(warrantyTimers[selectedWarrantyId]);
+                delete warrantyTimers[selectedWarrantyId];
+            }
+            alert('Warranty accepted!');
+        }
+        
+        function requestEdits() {
+            document.getElementById('rejectConfirmationOverlay').style.display = 'block';
+            document.getElementById('rejectConfirmation').style.display = 'block';
+        }
+
+        function closeRejectConfirmation() {
+            document.getElementById('rejectConfirmationOverlay').style.display = 'none';
+            document.getElementById('rejectConfirmation').style.display = 'none';
+
+        }
+
+        function requestEditsConfirmed() {
+            if (selectedWarrantyId) {
+                const warrantyIndex = warranties.findIndex(w => w.id === selectedWarrantyId);
+                if (warrantyIndex !== -1) {
+                    warranties[warrantyIndex].needsEdits = true;
+                    console.log(`Warranty with ID ${selectedWarrantyId} set to 'Needs Edits'.`);
+                    updateWarrantyDisplay();
+                    closeOverlay();
+                }
+                document.getElementById('rejectConfirmationOverlay').style.display = 'none';
+                document.getElementById('rejectConfirmation').style.display = 'none';
+            }
+        }
+
+        function updateWarrantyDisplay() {
+            const warrantiesContainer = document.getElementById('warranties-container');
+            const noWarrantiesMessage = document.getElementById('no-warranties-message');
+            warrantiesContainer.innerHTML = '';
+
+            if (warranties.length === 0) {
+                noWarrantiesMessage.style.display = 'block';
+                return;
+            } else {
+                noWarrantiesMessage.style.display = 'none';
+            }
+
+            warranties.forEach(warranty => {
+                const card = document.createElement('div');
+                card.className = 'warranty-card' + (warranty.needsEdits ? ' needs-edits' : '');
+                card.innerHTML = `
+                    <div class="warranty-card-content">
+                        <h4>${warranty.title}</h4>
+                        <p>${warranty.seller}</p>
+                        <div class="warranty-period">
+                        Days Since Assigned: <span>${warranty.daysSinceAssigned} Days</span>
+                        </div>
+                        <div class="remaining-period">
+                        <div class="progress-bar">
+                            <div class="progress" style="width: ${ (warranty.daysSinceAssigned / 7) * 100 }%;"></div>
+                        </div>
+                        <div class="days-left">${7 - warranty.daysSinceAssigned} Days Left</div>
+                        </div>
+                    </div>
+                    `;
+
+                card.onclick = () => showWarrantyDetails(warranty.id);
+                warrantiesContainer.appendChild(card);
+
+                if (!warranty.needsEdits) {
+                    const timeLeft = (7 - warranty.daysSinceAssigned) * 24 * 60 * 60 * 1000;
+                    if (warrantyTimers[warranty.id]) clearTimeout(warrantyTimers[warranty.id]); // Clear existing timer
+                    warrantyTimers[warranty.id] = setTimeout(() => {
+                        console.log(`Automatically accepting warranty with ID ${warranty.id}`);
+                        acceptWarrantyAutomatically(warranty.id);
+                    }, timeLeft);
+                }
+            });
+        }
+
+        function acceptWarrantyAutomatically(warrantyId) {
+            const warrantyIndex = warranties.findIndex(w => w.id === warrantyId);
+            if (warrantyIndex !== -1) {
+                warranties.splice(warrantyIndex, 1);
+                console.log(`Warranty with ID ${warrantyId} automatically accepted and removed.`);
+                updateWarrantyDisplay();
+            } else {
+                console.log(`Warranty with ID ${warrantyId} not found.`);
+            }
+        }
+
+        // Initial rendering of warranty cards
+        updateWarrantyDisplay();
+    </script>
 </body>
+
 </html>
