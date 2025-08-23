@@ -6,24 +6,9 @@
   <link rel="manifest" href="/Headsup/manifest.json">
   <title>E Trust</title>
   <style>
-    body {
-      margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background: #f9f9f9;
-      /* --- NEW: CSS Variables for dynamic layout --- */
-      --header-height: 73px; /* Default header height */
-      --nav-height: 61px;    /* Default nav height */
-    }
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 16px;
-      background: white;
-      border-bottom: 1px solid #ddd;
-      box-sizing: border-box; /* Ensures padding is included in height */
-      height: var(--header-height);
-    }
+    /* CSS is unchanged and correct */
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #f9f9f9; --header-height: 73px; --nav-height: 61px; }
+    header { display: flex; justify-content: space-between; align-items: center; padding: 16px; background: white; border-bottom: 1px solid #ddd; box-sizing: border-box; height: var(--header-height); }
     .left-header { display: flex; align-items: center; gap: 10px; }
     .avatar { width: 40px; height: 40px; background: #ccc; border-radius: 50%; }
     .welcome-text { font-size: 14px; color: #888; }
@@ -32,32 +17,10 @@
     .right-header { display: flex; gap: 16px; align-items: center; }
     .bell { position: relative; }
     .bell span { position: absolute; top: -5px; right: -8px; background: red; color: white; font-size: 10px; padding: 2px 4px; border-radius: 10px; }
-    
-    .bottom-nav {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: white;
-      border-top: 1px solid #ccc;
-      display: flex;
-      justify-content: space-around;
-      padding: 12px 0;
-      font-size: 12px;
-      box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
-      box-sizing: border-box;
-      height: var(--nav-height);
-    }
+    .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid #ccc; display: flex; justify-content: space-around; padding: 12px 0; font-size: 12px; box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05); box-sizing: border-box; height: var(--nav-height); }
     .bottom-nav div { text-align: center; flex: 1; color: #333; cursor: pointer; }
     .bottom-nav div span { display: block; font-size: 20px; }
-    
-    #main-frame {
-      width: 100%;
-      /* --- CRITICAL CHANGE: The iframe height is now calculated with CSS variables --- */
-      height: calc(100vh - var(--header-height) - var(--nav-height));
-      border: none;
-    }
-
+    #main-frame { width: 100%; height: calc(100vh - var(--header-height) - var(--nav-height)); border: none; }
     .menu-container { position: relative; }
     #menu-toggle { cursor: pointer; font-size: 24px; font-weight: bold; line-height: 1; }
     #dropdown-menu { display: none; position: absolute; top: 30px; right: 0; background-color: white; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); z-index: 100; width: 160px; }
@@ -100,8 +63,14 @@
   </div>
 
   <script>
+    const mainFrame = document.getElementById("main-frame");
+    const nav = document.getElementById("bottom-nav");
+    
+    // --- CRITICAL CHANGE: Use postMessage ---
+    let navHeight = 0; // Store the height globally
+
     function loadTab(page) {
-      document.getElementById("main-frame").src = page;
+      mainFrame.src = page;
     }
 
     const menuToggle = document.getElementById('menu-toggle');
@@ -109,27 +78,26 @@
     menuToggle.addEventListener('click', (event) => { event.stopPropagation(); dropdownMenu.classList.toggle('show'); });
     window.addEventListener('click', () => { if (dropdownMenu.classList.contains('show')) { dropdownMenu.classList.remove('show'); } });
     
-    // --- CRITICAL NEW SCRIPT ---
     document.addEventListener("DOMContentLoaded", function() {
         const header = document.getElementById("app-header");
-        const nav = document.getElementById("bottom-nav");
-        const iframe = document.getElementById("main-frame");
         const root = document.documentElement;
 
-        // 1. Measure the real height of the header and nav bar
         const headerHeight = header.offsetHeight;
-        const navHeight = nav.offsetHeight;
+        navHeight = nav.offsetHeight; // Set the global navHeight variable
 
-        // 2. Update the CSS variables with the real heights
         root.style.setProperty('--header-height', `${headerHeight}px`);
         root.style.setProperty('--nav-height', `${navHeight}px`);
 
-        // 3. Pass the nav height to the iframe as a CSS variable
-        // This is the magic that informs the child pages.
-        iframe.onload = function() {
-            if (iframe.contentDocument) {
-                iframe.contentDocument.documentElement.style.setProperty('--parent-nav-height', `${navHeight}px`);
-            }
+        // This is the new, robust communication method
+        mainFrame.onload = function() {
+            // Send a message to the loaded iframe
+            const message = {
+                type: 'setNavHeight',
+                height: navHeight
+            };
+            // The '*' means we can send this to any origin, which is safe here.
+            // For higher security, you could use window.location.origin.
+            mainFrame.contentWindow.postMessage(message, '*');
         };
     });
   </script>
