@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daily Sales Report</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #f2f2f7;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 60px); /* Adjusted for bottom navigation bar */
+      /* Removed height: 100vh; and padding-bottom */
+    }
+    .header-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 15px; /* Reduced padding */
+      background-color: #fff;
+      border-bottom: 1px solid #d1d1d6;
+      flex-shrink: 0; /* Prevent shrinking */
+    }
+    .header-nav button {
+      background: none;
+      border: none;
+      font-size: 18px; /* Reduced font size */
+      cursor: pointer;
+      color: #007aff;
+      padding: 5px 10px; /* Added padding for better click area */
+      border-radius: 8px;
+      transition: background-color 0.2s;
+    }
+    .header-nav button:active {
+        background-color: #e5e5ea;
+    }
+    .main-content {
+      flex: 1; /* Allows this section to grow and take available space */
+      overflow-y: auto; /* Enables scrolling for transaction list */
+      padding: 20px;
+    }
+    .keypad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px; /* Reduced gap */
+      background-color: #d1d1d6;
+      padding: 10px; /* Reduced padding */
+      border-top: 1px solid #ccc; /* Re-added border-top */
+      flex-shrink: 0; /* Prevent shrinking */
+    }
+    .keypad button {
+      background-color: #fff;
+      border: none;
+      font-size: 20px; /* Reduced font size */
+      padding: 12px 0; /* Reduced padding */
+      text-align: center;
+      color: #000;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      transition: all 0.1s ease-in-out;
+    }
+    .keypad button:active {
+      background-color: #e5e5ea;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+      transform: translateY(1px);
+    }
+    .transaction-controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px; /* Standardized gap */
+      padding: 16px; /* Standardized padding */
+      background-color: #f2f2f7;
+      flex-shrink: 0; /* Prevent shrinking */
+    }
+    .transaction-controls button {
+      background-color: #fff;
+      border: none;
+      font-size: 18px;
+      padding: 16px 0;
+      text-align: center;
+      font-weight: 600;
+      border-radius: 10px;
+      box-shadow: 0 3px 5px rgba(0,0,0,0.1);
+      transition: all 0.1s ease-in-out;
+    }
+    .transaction-controls button:active {
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+      transform: translateY(1px);
+    }
+    .income {
+      color: #34c759 !important;
+    }
+    .expense {
+      color: #ff3b30 !important;
+    }
+    .display {
+      background-color: #fff;
+      padding: 16px; /* Standardized padding */
+      text-align: right;
+      font-size: 40px; /* Reduced font size */
+      font-weight: 300;
+      border-bottom: 1px solid #d1d1d6;
+      flex-shrink: 0; /* Prevent shrinking */
+      overflow-x: auto; /* Allow horizontal scrolling for long numbers */
+      white-space: nowrap; /* Prevent numbers from wrapping */
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1); /* Subtle text shadow */
+    }
+    .transaction-list {
+      padding: 0;
+      margin: 0;
+      list-style: none;
+    }
+    .transaction-list li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center; /* Vertically align items */
+      padding: 10px;
+      border-bottom: 1px solid #e5e5ea;
+    }
+    .transaction-list li span:first-child {
+        flex-grow: 1; /* Allow time/category to take available space */
+    }
+    .transaction-list li span:last-child {
+        text-align: right; /* Right align amount */
+        min-width: 90px; /* Increased min-width for better alignment */
+    }
+    .transaction-list .income {
+      color: #34c759;
+    }
+    .transaction-list .expense {
+      color: #ff3b30;
+    }
+    .undo-btn {
+      background: none;
+      border: none;
+      font-size: 18px; /* Adjusted font size to match header nav */
+      color: #007aff;
+      padding: 5px 10px; /* Added padding for better click area */
+      border-radius: 8px;
+      transition: background-color 0.2s;
+    }
+    .undo-btn:active {
+        background-color: #e5e5ea;
+    }
+    .undo-btn:disabled {
+      color: #d1d1d6;
+    }
+
+    /* Category Selection Overlay */
+    .category-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    .category-modal {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      width: 90%;
+      max-width: 400px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+    .category-modal h3 {
+      margin-top: 0;
+      margin-bottom: 15px;
+      font-size: 20px;
+      text-align: center;
+    }
+    .category-buttons {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    .category-buttons button {
+      padding: 12px;
+      font-size: 16px;
+      border: 1px solid #d1d1d6;
+      border-radius: 8px;
+      background-color: #f9f9f9;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    .category-buttons button:hover {
+      background-color: #e5e5ea;
+    }
+    .category-buttons button:active {
+      background-color: #d1d1d6;
+    }
+    .category-modal .cancel-btn {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      background-color: #ccc;
+      color: #333;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header-nav">
+    <button onclick="window.parent.loadTab('reports.html')">📊 Reports</button>
+    <button onclick="window.parent.loadTab('settings.html')">⚙️ Settings</button>
+    <button class="undo-btn" id="undo-btn" onclick="undoLastTransaction()">Undo</button>
+  </div>
+
+  <div class="main-content">
+    <ul class="transaction-list" id="transaction-list"></ul>
+  </div>
+
+  <!-- Re-arranged order -->
+  <div class="display">
+    <span id="amount">0</span>
+  </div>
+
+  <div class="transaction-controls">
+    <button class="income" id="income-btn">Income</button>
+    <button class="expense" id="expense-btn">Expense</button>
+  </div>
+
+  <div class="keypad">
+    <button onclick="appendNumber('1')">1</button>
+    <button onclick="appendNumber('2')">2</button>
+    <button onclick="appendNumber('3')">3</button>
+    <button onclick="appendNumber('4')">4</button>
+    <button onclick="appendNumber('5')">5</button>
+    <button onclick="appendNumber('6')">6</button>
+    <button onclick="appendNumber('7')">7</button>
+    <button onclick="appendNumber('8')">8</button>
+    <button onclick="appendNumber('9')">9</button>
+    <button onclick="appendNumber('.')">.</button>
+    <button onclick="appendNumber('0')">0</button>
+    <button onclick="clearAmount()">C</button>
+  </div>
+
+  <!-- Category Selection Overlay -->
+  <div class="category-overlay" id="category-overlay" style="display: none;">
+    <div class="category-modal">
+      <h3 id="category-modal-title">Select Category</h3>
+      <div class="category-buttons" id="category-buttons"></div>
+      <button class="cancel-btn" onclick="hideCategorySelection()">Cancel</button>
+    </div>
+  </div>
+
+
+  <script>
+    const amountDisplay = document.getElementById('amount');
+    const transactionList = document.getElementById('transaction-list');
+    const undoBtn = document.getElementById('undo-btn');
+    const categoryOverlay = document.getElementById('category-overlay');
+    const categoryModalTitle = document.getElementById('category-modal-title');
+    const categoryButtonsContainer = document.getElementById('category-buttons');
+    const incomeBtn = document.getElementById('income-btn');
+    const expenseBtn = document.getElementById('expense-btn');
+
+    let currentAmount = '0';
+    let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+    let canUndo = false;
+    let currentTransactionType = ''; // To store 'income' or 'expense'
+
+    const LONG_PRESS_THRESHOLD = 500; // milliseconds
+    let longPressTimer;
+    let isLongPress = false;
+
+    function getTypes(type) {
+      return JSON.parse(localStorage.getItem(`${type}Types`)) || [];
+    }
+
+    function appendNumber(number) {
+      if (currentAmount === '0' && number !== '.') {
+        currentAmount = '';
+      }
+      if (number === '.' && currentAmount.includes('.')) {
+        return;
+      }
+      currentAmount += number;
+      updateDisplay();
+    }
+
+    function clearAmount() {
+      currentAmount = '0';
+      updateDisplay();
+    }
+
+    function updateDisplay() {
+      amountDisplay.textContent = currentAmount;
+    }
+
+    function startPress(type) {
+        isLongPress = false;
+        longPressTimer = setTimeout(() => {
+            isLongPress = true;
+            showCategorySelection(type);
+        }, LONG_PRESS_THRESHOLD);
+    }
+
+    function endPress(type) {
+        clearTimeout(longPressTimer);
+        if (!isLongPress) {
+            // This is a short tap/click - for general transaction
+            confirmTransaction(type, type === 'income' ? 'General Income' : 'General Expense');
+        }
+    }
+
+    // Attach event listeners for Income and Expense buttons
+    incomeBtn.addEventListener('mousedown', () => startPress('income'));
+    incomeBtn.addEventListener('mouseup', () => endPress('income'));
+    incomeBtn.addEventListener('mouseleave', () => clearTimeout(longPressTimer)); // Clear if mouse leaves button
+    incomeBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startPress('income'); }, { passive: false });
+    incomeBtn.addEventListener('touchend', () => endPress('income'));
+    incomeBtn.addEventListener('touchcancel', () => clearTimeout(longPressTimer));
+
+    expenseBtn.addEventListener('mousedown', () => startPress('expense'));
+    expenseBtn.addEventListener('mouseup', () => endPress('expense'));
+    expenseBtn.addEventListener('mouseleave', () => clearTimeout(longPressTimer));
+    expenseBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startPress('expense'); }, { passive: false });
+    expenseBtn.addEventListener('touchend', () => endPress('expense'));
+    expenseBtn.addEventListener('touchcancel', () => clearTimeout(longPressTimer));
+
+
+    function showCategorySelection(type) {
+      const amount = parseFloat(currentAmount);
+      if (isNaN(amount) || amount === 0) {
+        alert("Please enter an amount first.");
+        return;
+      }
+
+      currentTransactionType = type;
+      categoryModalTitle.textContent = `Select ${type === 'income' ? 'Income' : 'Expense'} Category`;
+      categoryButtonsContainer.innerHTML = '';
+
+      const types = getTypes(type);
+
+      // Add predefined types ONLY
+      if (types.length === 0) {
+          alert(`No ${type} categories defined. Please add some in Settings.`);
+          hideCategorySelection();
+          return;
+      }
+
+      types.forEach(cat => {
+        const button = document.createElement('button');
+        button.textContent = cat;
+        button.onclick = () => confirmTransaction(type, cat);
+        categoryButtonsContainer.appendChild(button);
+      });
+
+      categoryOverlay.style.display = 'flex';
+    }
+
+    function hideCategorySelection() {
+      categoryOverlay.style.display = 'none';
+    }
+
+    function confirmTransaction(type, category) {
+      const amount = parseFloat(currentAmount);
+      const transaction = {
+        id: Date.now(),
+        type,
+        amount,
+        category,
+        date: new Date().toISOString().split('T')[0],
+        time: new Date().toLocaleTimeString(),
+        status: 'active'
+      };
+      transactions.push(transaction);
+      localStorage.setItem('transactions', JSON.stringify(transactions));
+      clearAmount();
+      renderTransactions();
+      canUndo = true;
+      updateUndoButton();
+      hideCategorySelection();
+
+      // Visual feedback
+      const btn = document.querySelector(`.${type}`);
+      btn.style.backgroundColor = type === 'income' ? '#d4edda' : '#f8d7da';
+      setTimeout(() => {
+        btn.style.backgroundColor = '#fff';
+      }, 300);
+    }
+
+    function undoLastTransaction() {
+        if (!canUndo) return;
+
+        const lastTransaction = transactions[transactions.length - 1];
+        if (lastTransaction) {
+            lastTransaction.status = 'undone';
+            localStorage.setItem('transactions', JSON.stringify(transactions));
+            renderTransactions();
+            canUndo = false;
+            updateUndoButton();
+            alert('Last transaction undone.');
+        } else {
+            alert('No transactions to undo.');
+        }
+    }
+
+    function renderTransactions() {
+      transactionList.innerHTML = '';
+      const today = new Date().toISOString().split('T')[0];
+      const todayTransactions = transactions.filter(t => t.date === today && t.status === 'active');
+
+      // Sort by timestamp in descending order to show newest first
+      todayTransactions.sort((a, b) => b.id - a.id);
+
+      for (const transaction of todayTransactions) {
+        const li = document.createElement('li');
+        li.className = transaction.type;
+        li.innerHTML = `
+          <span>${transaction.time} - ${transaction.category}</span>
+          <span>$${transaction.amount.toFixed(2)}</span>
+        `;
+        transactionList.appendChild(li);
+      }
+    }
+
+    function updateUndoButton() {
+        const lastTransaction = transactions[transactions.length - 1];
+        if (lastTransaction && lastTransaction.status === 'active') {
+            canUndo = true;
+        } else {
+            canUndo = false;
+        }
+        undoBtn.disabled = !canUndo;
+    }
+
+    renderTransactions();
+    updateUndoButton();
+  </script>
+</body>
+</html>

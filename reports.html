@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reports</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #f2f2f7;
+      margin: 0;
+      padding: 20px;
+    }
+    .reports-section {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 10px;
+    }
+    .reports-section h2 {
+      margin-top: 0;
+      font-size: 22px;
+      font-weight: 600;
+    }
+    .date-picker {
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #d1d1d6;
+      border-radius: 8px;
+      margin-bottom: 10px;
+    }
+    .generate-report-btn,
+    .download-report-btn {
+      width: 100%;
+      padding: 15px;
+      font-size: 18px;
+      background-color: #007aff;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    .download-report-btn {
+      background-color: #28a745;
+      display: none; /* Hidden by default */
+    }
+    .loading-indicator {
+      display: none;
+      text-align: center;
+      margin-top: 10px;
+      font-size: 16px;
+      color: #555;
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+  <div class="reports-section">
+    <h2>Generate Report</h2>
+    <input type="date" id="report-date" class="date-picker">
+    <button class="generate-report-btn" id="generate-report-btn" onclick="generateReport()">Generate PDF Report</button>
+    <button class="download-report-btn" id="download-report-btn">Download Report</button>
+    <div class="loading-indicator" id="loading-indicator">Generating report...</div>
+  </div>
+
+  <script>
+    let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+    let generatedPdfData = null;
+    let generatedPdfFileName = '';
+
+    const generateReportBtn = document.getElementById('generate-report-btn');
+    const downloadReportBtn = document.getElementById('download-report-btn');
+    const loadingIndicator = document.getElementById('loading-indicator');
+
+    function showLoading() {
+      loadingIndicator.style.display = 'block';
+      generateReportBtn.disabled = true;
+      downloadReportBtn.style.display = 'none';
+      console.log("--- Starting PDF Generation ---");
+    }
+
+    function hideLoading() {
+      loadingIndicator.style.display = 'none';
+      generateReportBtn.disabled = false;
+      console.log("--- PDF Generation Finished ---");
+    }
+
+    function finalizePdfGeneration(doc, reportDate) {
+        generatedPdfFileName = `report-${reportDate}.pdf`;
+        generatedPdfData = doc.output('blob');
+        console.log("PDF Blob generated. Activating download button...");
+
+        downloadReportBtn.style.display = 'block';
+        downloadReportBtn.onclick = function() {
+            const url = URL.createObjectURL(generatedPdfData);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = generatedPdfFileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        };
+        hideLoading();
+    }
+
+    function generateReport() {
+      showLoading();
+      try {
+        const { jsPDF } = window.jspdf;
+        const reportDate = document.getElementById('report-date').value;
+        if (!reportDate) {
+          alert('Please select a date.');
+          hideLoading();
+          return;
+        }
+
+        console.log("Fetching transactions from localStorage...");
+        // Ensure transactions are up-to-date
+        transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+
+        const dailyTransactions = transactions.filter(t => t.date === reportDate);
+        console.log(`Found ${dailyTransactions.length} transactions for ${reportDate}.`);
+
+        if (dailyTransactions.length === 0) {
+          alert('No transactions for the selected date.');
+          hideLoading();
+          return;
+        }
+
+        console.log("Initializing jsPDF document...");
+        const doc = new jsPDF();
+        let totalIncome = 0;
+        let totalExpenses = 0;
+        let activeTransactionsCount = 0;
+        let undoneTransactionsCount = 0;
+
+        let incomeByCategory = {};
+        let expenseByCategory = {};
+
+        const pageHeight = doc.internal.pageSize.height;
+        const margin = 10;
+        const rightMargin = doc.internal.pageSize.width - margin;
+        let y = margin; // Current Y position
+
+        // Column positions
+        const col1X = 15; // Time
+        const col2X = 55; // Category
+        const col3X = 110; // Type
+        const col4X = rightMargin; // Amount (right-aligned)
+
+        // Function to add main report header to new page
+        function addMainPageHeader() {
+            doc.addPage();
+            y = margin; // Reset Y for new page
+            doc.addImage('icons/icon-192.png', 'PNG', 10, y, 20, 20); // Icon in top-left
+            doc.setFontSize(22);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Daily Financial Report', 105, y + 10, null, null, 'center');
+
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'normal');
+            doc.text(`Date: ${reportDate}`, 105, y + 20, null, null, 'center');
+            doc.line(10, y + 25, 200, y + 25); // Horizontal line
+            y += 35; // Move Y past header
+        }
+
+        // --- Report Header (Initial Page) ---
+        doc.addImage('icons/icon-192.png', 'PNG', 10, y, 20, 20); // Icon in top-left
+        doc.setFontSize(22);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Daily Financial Report', 105, y + 10, null, null, 'center');
+
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Date: ${reportDate}`, 105, y + 20, null, null, 'center');
+        doc.line(10, y + 25, 200, y + 25); // Horizontal line
+        y += 35; // Move Y past header
+
+        // --- Transaction Details ---
+        doc.setFontSize(16);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Transactions:', 10, y);
+        y += 10;
+
+        // Column Headers for Transactions
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Time', col1X, y);
+        doc.text('Category', col2X, y);
+        doc.text('Type', col3X, y);
+        doc.text('Amount', col4X, y, null, null, 'right'); // Right align header
+        doc.line(10, y + 2, 200, y + 2); // Line under headers
+        y += 5; // Space after column headers (reduced from 7 to 5 for tighter spacing)
+
+        doc.setFontSize(10); // Reduced font size for transaction details
+        doc.setFont('helvetica', 'normal');
+        dailyTransactions.forEach(t => {
+          // Check for page overflow before adding new line
+          if (y + 6 > pageHeight - margin) { // 6 is approx line height for new font size
+              addMainPageHeader(); // Add only main header on new page
+              // Re-add column headers on new page
+              doc.setFontSize(10);
+              doc.setFont('helvetica', 'bold');
+              doc.text('Time', col1X, y);
+              doc.text('Category', col2X, y);
+              doc.text('Type', col3X, y);
+              doc.text('Amount', col4X, y, null, null, 'right');
+              doc.line(10, y + 2, 200, y + 2);
+              y += 5; // Space after column headers
+              doc.setFontSize(10); // Reset font size for transaction details
+              doc.setFont('helvetica', 'normal');
+          }
+
+          let amountValue = t.amount.toFixed(2);
+          let amountText = `$${amountValue}`;
+          let typeText = t.type.toUpperCase();
+          let statusText = '';
+          let categoryText = t.category || 'N/A'; // Use N/A if no category
+
+          let textColor = [0, 0, 0]; // Default black
+          let isUndone = false;
+
+          if (t.status === 'undone') {
+            isUndone = true;
+            statusText = ' (CANCELLED)'; // Add to typeText if needed, or handle separately
+            textColor = [150, 150, 150]; // Gray for undone
+            undoneTransactionsCount++;
+          } else {
+            activeTransactionsCount++;
+            if (t.type === 'income') {
+              textColor = [52, 199, 89]; // Green for income
+              totalIncome += t.amount;
+              incomeByCategory[t.category] = (incomeByCategory[t.category] || 0) + t.amount;
+            } else {
+              textColor = [255, 59, 48]; // Red for expense
+              totalExpenses += t.amount;
+              expenseByCategory[t.category] = (expenseByCategory[t.category] || 0) + t.amount;
+            }
+          }
+
+          doc.setTextColor(textColor[0], textColor[1], textColor[2]);
+
+          // Print each column separately
+          doc.text(t.time, col1X, y);
+          doc.text(categoryText, col2X, y);
+          doc.text(typeText + statusText, col3X, y);
+          doc.text(amountText, col4X, y, null, null, 'right');
+
+          // Add strikethrough if undone
+          if (isUndone) {
+            const timeWidth = doc.getStringUnitWidth(t.time) * doc.internal.getFontSize() / doc.internal.scaleFactor;
+            const categoryWidth = doc.getStringUnitWidth(categoryText) * doc.internal.getFontSize() / doc.internal.scaleFactor;
+            const typeStatusWidth = doc.getStringUnitWidth(typeText + statusText) * doc.internal.getFontSize() / doc.internal.scaleFactor;
+            const amountWidth = doc.getStringUnitWidth(amountText) * doc.internal.getFontSize() / doc.internal.scaleFactor;
+
+            doc.line(col1X, y - 2, col1X + timeWidth, y - 2); // Strikethrough for time
+            doc.line(col2X, y - 2, col2X + categoryWidth, y - 2); // Strikethrough for category
+            doc.line(col3X, y - 2, col3X + typeStatusWidth, y - 2); // Strikethrough for type + status
+            doc.line(col4X - amountWidth, y - 2, col4X, y - 2); // Strikethrough for amount
+          }
+          doc.setTextColor(0, 0, 0); // Reset color to black for next line
+          y += 6; // Consistent line height (reduced from 7 to 6)
+        });
+
+        // Ensure enough space for summary or add new page
+        // Unconditional page break for Summary section
+        addMainPageHeader();
+
+        doc.line(10, y + 5, 200, y + 5); // Horizontal line before summary
+
+        // --- Summary Section ---
+        doc.setFontSize(14); // Reduced font size
+        doc.setFont('helvetica', 'bold');
+        doc.text('Summary:', 10, y + 15);
+
+        doc.setFontSize(12); // Reduced font size
+        doc.setFont('helvetica', 'normal');
+        const netProfit = totalIncome - totalExpenses;
+
+        doc.setTextColor(52, 199, 89);
+        doc.text(`Total Income: $${totalIncome.toFixed(2)}`, 15, y + 25);
+        doc.setTextColor(255, 59, 48);
+        doc.text(`Total Expenses: $${totalExpenses.toFixed(2)}`, 15, y + 35);
+
+        doc.setTextColor(0, 0, 0); // Reset to black
+        doc.setFontSize(14); // Reduced font size
+        doc.setFont('helvetica', 'bold');
+        doc.text(`Net Profit/Loss: $${netProfit.toFixed(2)}`, 15, y + 45);
+
+        doc.setFontSize(10); // Reduced font size
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Active Transactions: ${activeTransactionsCount}`, 15, y + 55);
+        doc.text(`Cancelled Transactions: ${undoneTransactionsCount}`, 15, y + 62);
+
+        // --- Category Analytics ---
+        y = y + 70; // Move y down for new section
+        const categoryAnalyticsHeight = 50 + (Object.keys(incomeByCategory).length + Object.keys(expenseByCategory).length) * 7; // Estimate height
+        if (y + categoryAnalyticsHeight > pageHeight - margin) {
+            addMainPageHeader();
+        }
+        doc.line(10, y, 200, y); // Horizontal line
+        doc.setFontSize(14); // Reduced font size
+        doc.setFont('helvetica', 'bold');
+        doc.text('Category Breakdown:', 10, y + 10);
+
+        doc.setFontSize(10); // Reduced font size
+        doc.setFont('helvetica', 'normal');
+        y += 20;
+
+        // Income Categories
+        doc.setTextColor(52, 199, 89);
+        doc.text('Income by Category:', 15, y);
+        y += 6; // Reduced line height
+        for (const category in incomeByCategory) {
+            if (y + 6 > pageHeight - margin) { addMainPageHeader(); doc.setFontSize(10); doc.setFont('helvetica', 'normal'); doc.setTextColor(52, 199, 89); }
+            doc.text(`  ${category}: $${incomeByCategory[category].toFixed(2)}`, 15, y);
+            y += 6;
+        }
+        if (Object.keys(incomeByCategory).length === 0) {
+            if (y + 6 > pageHeight - margin) { addMainPageHeader(); doc.setFontSize(10); doc.setFont('helvetica', 'normal'); doc.setTextColor(52, 199, 89); }
+            doc.text('  No income categories.', 15, y);
+            y += 6;
+        }
+
+        y += 5; // Small gap
+
+        // Expense Categories
+        doc.setTextColor(255, 59, 48);
+        doc.text('Expenses by Category:', 15, y);
+        y += 6; // Reduced line height
+        for (const category in expenseByCategory) {
+            if (y + 6 > pageHeight - margin) { addMainPageHeader(); doc.setFontSize(10); doc.setFont('helvetica', 'normal'); doc.setTextColor(255, 59, 48); }
+            doc.text(`  ${category}: $${expenseByCategory[category].toFixed(2)}`, 15, y);
+            y += 6;
+        }
+        if (Object.keys(expenseByCategory).length === 0) {
+            if (y + 6 > pageHeight - margin) { addMainPageHeader(); doc.setFontSize(10); doc.setFont('helvetica', 'normal'); doc.setTextColor(255, 59, 48); }
+            doc.text('  No expense categories.', 15, y);
+            y += 6;
+        }
+        doc.setTextColor(0, 0, 0); // Reset color
+
+        // --- Report Generated On ---
+        doc.setFontSize(10);
+        doc.text(`Report Generated On: ${new Date().toLocaleString()}`, 10, doc.internal.pageSize.height - 10);
+
+        finalizePdfGeneration(doc, reportDate);
+
+      } catch (error) {
+        console.error("Error generating PDF:", error);
+        alert("An error occurred while generating the report. Please try again.");
+        hideLoading();
+      }
+    }
+
+    document.getElementById('report-date').valueAsDate = new Date();
+  </script>
+
+</body>
+</html>

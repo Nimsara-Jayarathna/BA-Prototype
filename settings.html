@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #f2f2f7;
+      margin: 0;
+      padding: 20px;
+    }
+    .settings-section {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+    }
+    .settings-section h2 {
+      margin-top: 0;
+      font-size: 22px;
+      font-weight: 600;
+      margin-bottom: 15px;
+    }
+    .input-group {
+      display: flex;
+      margin-bottom: 10px;
+    }
+    .input-group input {
+      flex: 1;
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #d1d1d6;
+      border-radius: 8px 0 0 8px;
+      outline: none;
+    }
+    .input-group button {
+      padding: 10px 15px;
+      font-size: 16px;
+      background-color: #007aff;
+      color: #fff;
+      border: none;
+      border-radius: 0 8px 8px 0;
+      cursor: pointer;
+    }
+    .type-list {
+      list-style: none;
+      padding: 0;
+      margin-top: 15px;
+    }
+    .type-list li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px;
+      background-color: #f9f9f9;
+      border: 1px solid #eee;
+      border-radius: 8px;
+      margin-bottom: 8px;
+    }
+    .type-list li span {
+      font-size: 16px;
+    }
+    .type-list li button {
+      background-color: #ff3b30;
+      color: #fff;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="settings-section">
+    <h2>Manage Income Types</h2>
+    <div class="input-group">
+      <input type="text" id="new-income-type" placeholder="New Income Type">
+      <button onclick="addType('income')">Add</button>
+    </div>
+    <ul id="income-type-list" class="type-list"></ul>
+  </div>
+
+  <div class="settings-section">
+    <h2>Manage Expense Types</h2>
+    <div class="input-group">
+      <input type="text" id="new-expense-type" placeholder="New Expense Type">
+      <button onclick="addType('expense')">Add</button>
+    </div>
+    <ul id="expense-type-list" class="type-list"></ul>
+  </div>
+
+  <script>
+    function getTypes(type) {
+      return JSON.parse(localStorage.getItem(`${type}Types`)) || [];
+    }
+
+    function saveTypes(type, types) {
+      localStorage.setItem(`${type}Types`, JSON.stringify(types));
+    }
+
+    function renderTypes(type) {
+      const listElement = document.getElementById(`${type}-type-list`);
+      listElement.innerHTML = '';
+      const types = getTypes(type);
+      types.forEach(t => {
+        const li = document.createElement('li');
+        li.innerHTML = `
+          <span>${t}</span>
+          <button onclick="removeType('${type}', '${t}')">Remove</button>
+        `;
+        listElement.appendChild(li);
+      });
+    }
+
+    function addType(type) {
+      const inputElement = document.getElementById(`new-${type}-type`);
+      const newType = inputElement.value.trim();
+      if (newType && !getTypes(type).includes(newType)) {
+        const types = getTypes(type);
+        types.push(newType);
+        saveTypes(type, types);
+        inputElement.value = '';
+        renderTypes(type);
+      }
+    }
+
+    function removeType(type, typeToRemove) {
+      let types = getTypes(type);
+      types = types.filter(t => t !== typeToRemove);
+      saveTypes(type, types);
+      renderTypes(type);
+    }
+
+    // Initial render
+    renderTypes('income');
+    renderTypes('expense');
+  </script>
+
+</body>
+</html>
