@@ -5,360 +5,279 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Reports</title>
   <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background-color: #f2f2f7;
-      margin: 0;
-      padding: 20px;
-    }
-    .reports-section {
-      background-color: #fff;
-      padding: 20px;
-      border-radius: 10px;
-    }
-    .reports-section h2 {
-      margin-top: 0;
-      font-size: 22px;
-      font-weight: 600;
-    }
-    .date-picker {
-      width: 100%;
-      padding: 10px;
-      font-size: 16px;
-      border: 1px solid #d1d1d6;
-      border-radius: 8px;
-      margin-bottom: 10px;
-    }
-    .generate-report-btn,
-    .download-report-btn {
-      width: 100%;
-      padding: 15px;
-      font-size: 18px;
-      background-color: #007aff;
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      margin-top: 10px;
-    }
-    .download-report-btn {
-      background-color: #28a745;
-      display: none; /* Hidden by default */
-    }
-    .loading-indicator {
-      display: none;
-      text-align: center;
-      margin-top: 10px;
-      font-size: 16px;
-      color: #555;
-    }
+    /* CSS is unchanged */
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f2f2f7; margin: 0; padding: 20px; }
+    .reports-section { background-color: #fff; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+    .reports-section h2 { margin-top: 0; font-size: 22px; font-weight: 600; border-bottom: 1px solid #e5e5ea; padding-bottom: 10px; margin-bottom: 15px; }
+    .date-picker, .month-picker { width: 100%; padding: 10px; font-size: 16px; border: 1px solid #d1d1d6; border-radius: 8px; margin-bottom: 10px; box-sizing: border-box; }
+    .report-btn, .download-btn { width: 100%; padding: 15px; font-size: 18px; color: #fff; border: none; border-radius: 8px; cursor: pointer; margin-top: 10px; }
+    .generate-daily-btn { background-color: #007aff; }
+    .generate-monthly-btn { background-color: #5856d6; }
+    .download-btn { background-color: #34c759; display: none; }
+    .loading-indicator { display: none; text-align: center; margin-top: 10px; font-size: 16px; color: #555; }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
   <div class="reports-section">
-    <h2>Generate Report</h2>
+    <h2>Daily Report</h2>
     <input type="date" id="report-date" class="date-picker">
-    <button class="generate-report-btn" id="generate-report-btn" onclick="generateReport()">Generate PDF Report</button>
-    <button class="download-report-btn" id="download-report-btn">Download Report</button>
-    <div class="loading-indicator" id="loading-indicator">Generating report...</div>
+    <button class="report-btn generate-daily-btn" id="generate-daily-btn" onclick="generateDailyReport()">Generate Daily PDF</button>
+    <button class="download-btn" id="download-daily-btn">Download Daily Report</button>
   </div>
 
-  <script>
-    let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
-    let generatedPdfData = null;
-    let generatedPdfFileName = '';
+  <div class="reports-section">
+    <h2>Monthly Report</h2>
+    <input type="month" id="report-month" class="month-picker">
+    <button class="report-btn generate-monthly-btn" id="generate-monthly-btn" onclick="generateMonthlyReport()">Generate Monthly Summary PDF</button>
+    <button class="download-btn" id="download-monthly-btn">Download Monthly Report</button>
+  </div>
+  
+  <div class="loading-indicator" id="loading-indicator">Generating report...</div>
 
-    const generateReportBtn = document.getElementById('generate-report-btn');
-    const downloadReportBtn = document.getElementById('download-report-btn');
+  <script>
+    const { jsPDF } = window.jspdf;
+    let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+
+    const CURRENCY_SYMBOL = 'LKR';
+    const LOGO_BASE64 = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAoHBwgHBgoICAgLCgoLDhgQDg0NDh0VFhEYIx8lJCIfIiEmKzcvJik0KSEiMEExNDk7Pj4+JS5ESUM8SDc9Pjv/2wBDAQoLCw4NDhwQEBw7KCIoOzs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozv/wAARCAAQABADASIAAhEBAxEB/8QAGQAAAwEBAQAAAAAAAAAAAAAAAAIDAQQF/8QAIxAAAQMDBAIDAAAAAAAAAAAAAQIDEQAEIRIxBUEiMlFhcP/EABYBAQEBAAAAAAAAAAAAAAAAAAABBf/EABwRAQEBAAIDAQAAAAAAAAAAAAABEQISAyExQf/aAAwDAQACEQMRAD8A6q2t5XqKkSryTCSOU1Zq3+KHEoSCpQAgc1PikONpWhQUhQkKBmQaB2s/aC4W3i4klS/kCBPwTQet7+ZfSgtqKUJ/UUgz9yaZpa2qQpISk5EpGYE8Gg7G0S2G0obSEISIAHAFQ3//2Q==';
+
+    const dailyBtn = document.getElementById('generate-daily-btn');
+    const monthlyBtn = document.getElementById('generate-monthly-btn');
+    const downloadDailyBtn = document.getElementById('download-daily-btn');
+    const downloadMonthlyBtn = document.getElementById('download-monthly-btn');
     const loadingIndicator = document.getElementById('loading-indicator');
 
-    function showLoading() {
-      loadingIndicator.style.display = 'block';
-      generateReportBtn.disabled = true;
-      downloadReportBtn.style.display = 'none';
-      console.log("--- Starting PDF Generation ---");
-    }
+    const COLOR_INCOME = [52, 199, 89];
+    const COLOR_EXPENSE = [255, 59, 48];
+    const COLOR_BLACK = [33, 33, 33];
+    const COLOR_GRAY = [150, 150, 150];
+    const COLOR_LINE = [229, 229, 234];
 
-    function hideLoading() {
-      loadingIndicator.style.display = 'none';
-      generateReportBtn.disabled = false;
-      console.log("--- PDF Generation Finished ---");
-    }
+    const PAGE_MARGIN = 15;
+    const PAGE_WIDTH = 210;
+    const PAGE_HEIGHT = 297;
 
-    function finalizePdfGeneration(doc, reportDate) {
-        generatedPdfFileName = `report-${reportDate}.pdf`;
-        generatedPdfData = doc.output('blob');
-        console.log("PDF Blob generated. Activating download button...");
+    function showLoading() { /* Unchanged */ loadingIndicator.style.display = 'block'; dailyBtn.disabled = true; monthlyBtn.disabled = true; downloadDailyBtn.style.display = 'none'; downloadMonthlyBtn.style.display = 'none'; }
+    function hideLoading() { /* Unchanged */ loadingIndicator.style.display = 'none'; dailyBtn.disabled = false; monthlyBtn.disabled = false; }
+    function downloadPdf(blob, fileName) { /* Unchanged */ const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = fileName; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url); }
+    
+    function drawPageHeader(doc, title, date) { /* Unchanged */ doc.addImage(LOGO_BASE64, 'JPEG', PAGE_MARGIN, 15, 20, 20); doc.setFontSize(24); doc.setFont('helvetica', 'bold'); doc.setTextColor(...COLOR_BLACK); doc.text(title, PAGE_WIDTH / 2, 20, { align: 'center' }); doc.setFontSize(14); doc.setFont('helvetica', 'normal'); doc.text(`Date: ${date}`, PAGE_WIDTH / 2, 28, { align: 'center' }); return 40; }
 
-        downloadReportBtn.style.display = 'block';
-        downloadReportBtn.onclick = function() {
-            const url = URL.createObjectURL(generatedPdfData);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = generatedPdfFileName;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        };
-        hideLoading();
-    }
+    // --- UPDATED: drawSummaryPage with precise currency alignment ---
+    function drawSummaryPage(doc, title, summaryData) {
+        doc.addPage();
+        let y = drawPageHeader(doc, title, summaryData.date);
+        
+        doc.setDrawColor(...COLOR_LINE);
+        doc.line(PAGE_MARGIN, y, PAGE_WIDTH - PAGE_MARGIN, y);
+        y += 15;
+        
+        doc.setFontSize(16); doc.setFont('helvetica', 'bold'); doc.setTextColor(...COLOR_BLACK);
+        doc.text('Summary:', PAGE_MARGIN, y); y += 10;
 
-    function generateReport() {
-      showLoading();
-      try {
-        const { jsPDF } = window.jspdf;
-        const reportDate = document.getElementById('report-date').value;
-        if (!reportDate) {
-          alert('Please select a date.');
-          hideLoading();
-          return;
-        }
+        const currencyX = 160; // X position for the LKR symbol
+        const valueX = 195;     // X position for the right-aligned number
 
-        console.log("Fetching transactions from localStorage...");
-        // Ensure transactions are up-to-date
-        transactions = JSON.parse(localStorage.getItem('transactions')) || [];
-
-        const dailyTransactions = transactions.filter(t => t.date === reportDate);
-        console.log(`Found ${dailyTransactions.length} transactions for ${reportDate}.`);
-
-        if (dailyTransactions.length === 0) {
-          alert('No transactions for the selected date.');
-          hideLoading();
-          return;
-        }
-
-        console.log("Initializing jsPDF document...");
-        const doc = new jsPDF();
-        let totalIncome = 0;
-        let totalExpenses = 0;
-        let activeTransactionsCount = 0;
-        let undoneTransactionsCount = 0;
-
-        let incomeByCategory = {};
-        let expenseByCategory = {};
-
-        const pageHeight = doc.internal.pageSize.height;
-        const margin = 10;
-        const rightMargin = doc.internal.pageSize.width - margin;
-        let y = margin; // Current Y position
-
-        // Column positions
-        const col1X = 15; // Time
-        const col2X = 55; // Category
-        const col3X = 110; // Type
-        const col4X = rightMargin; // Amount (right-aligned)
-
-        // Function to add main report header to new page
-        function addMainPageHeader() {
-            doc.addPage();
-            y = margin; // Reset Y for new page
-            doc.addImage('icons/icon-192.png', 'PNG', 10, y, 20, 20); // Icon in top-left
-            doc.setFontSize(22);
-            doc.setFont('helvetica', 'bold');
-            doc.text('Daily Financial Report', 105, y + 10, null, null, 'center');
-
-            doc.setFontSize(14);
-            doc.setFont('helvetica', 'normal');
-            doc.text(`Date: ${reportDate}`, 105, y + 20, null, null, 'center');
-            doc.line(10, y + 25, 200, y + 25); // Horizontal line
-            y += 35; // Move Y past header
-        }
-
-        // --- Report Header (Initial Page) ---
-        doc.addImage('icons/icon-192.png', 'PNG', 10, y, 20, 20); // Icon in top-left
-        doc.setFontSize(22);
-        doc.setFont('helvetica', 'bold');
-        doc.text('Daily Financial Report', 105, y + 10, null, null, 'center');
-
-        doc.setFontSize(14);
-        doc.setFont('helvetica', 'normal');
-        doc.text(`Date: ${reportDate}`, 105, y + 20, null, null, 'center');
-        doc.line(10, y + 25, 200, y + 25); // Horizontal line
-        y += 35; // Move Y past header
-
-        // --- Transaction Details ---
-        doc.setFontSize(16);
-        doc.setFont('helvetica', 'bold');
-        doc.text('Transactions:', 10, y);
+        doc.setFontSize(12); doc.setFont('helvetica', 'normal');
+        doc.setTextColor(...COLOR_BLACK);
+        doc.text('Total Income:', PAGE_MARGIN + 5, y);
+        doc.setTextColor(...COLOR_INCOME);
+        doc.text(CURRENCY_SYMBOL, currencyX, y); // Split symbol and value
+        doc.text(summaryData.totalIncome.toFixed(2), valueX, y, { align: 'right' });
+        y += 7;
+        
+        doc.setTextColor(...COLOR_BLACK);
+        doc.text('Total Expenses:', PAGE_MARGIN + 5, y);
+        doc.setTextColor(...COLOR_EXPENSE);
+        doc.text(CURRENCY_SYMBOL, currencyX, y); // Split symbol and value
+        doc.text(summaryData.totalExpenses.toFixed(2), valueX, y, { align: 'right' });
         y += 10;
 
-        // Column Headers for Transactions
-        doc.setFontSize(10);
         doc.setFont('helvetica', 'bold');
-        doc.text('Time', col1X, y);
-        doc.text('Category', col2X, y);
-        doc.text('Type', col3X, y);
-        doc.text('Amount', col4X, y, null, null, 'right'); // Right align header
-        doc.line(10, y + 2, 200, y + 2); // Line under headers
-        y += 5; // Space after column headers (reduced from 7 to 5 for tighter spacing)
+        doc.setTextColor(...COLOR_BLACK);
+        doc.text('Net Profit/Loss:', PAGE_MARGIN + 5, y);
+        const netProfit = summaryData.totalIncome - summaryData.totalExpenses;
+        doc.setTextColor(...(netProfit >= 0 ? COLOR_INCOME : COLOR_EXPENSE));
+        doc.text(CURRENCY_SYMBOL, currencyX, y); // Split symbol and value
+        doc.text(netProfit.toFixed(2), valueX, y, { align: 'right' });
+        y += 10;
 
-        doc.setFontSize(10); // Reduced font size for transaction details
-        doc.setFont('helvetica', 'normal');
+        doc.setFont('helvetica', 'normal'); doc.setTextColor(...COLOR_BLACK);
+        doc.text('Active Transactions:', PAGE_MARGIN + 5, y);
+        doc.text(`${summaryData.activeCount}`, valueX, y, { align: 'right' });
+        y += 7;
+        doc.text('Cancelled Transactions:', PAGE_MARGIN + 5, y);
+        doc.text(`${summaryData.cancelledCount}`, valueX, y, { align: 'right' });
+        y += 15;
+
+        doc.line(PAGE_MARGIN, y, PAGE_WIDTH - PAGE_MARGIN, y); y += 10;
+
+        doc.setFontSize(16); doc.setFont('helvetica', 'bold'); doc.setTextColor(...COLOR_BLACK);
+        doc.text('Category Breakdown:', PAGE_MARGIN, y); y += 10;
+
+        doc.setFontSize(12); doc.setFont('helvetica', 'normal');
+        doc.setTextColor(...COLOR_INCOME);
+        doc.text('Income by Category:', PAGE_MARGIN + 5, y); y += 7;
+        for (const category in summaryData.incomeByCategory) {
+            doc.setTextColor(...COLOR_BLACK);
+            doc.text(category, PAGE_MARGIN + 10, y);
+            doc.setTextColor(...COLOR_INCOME);
+            doc.text(CURRENCY_SYMBOL, currencyX, y); // Split symbol and value
+            doc.text(summaryData.incomeByCategory[category].toFixed(2), valueX, y, { align: 'right' });
+            y += 7;
+        }
+        y += 5;
+        doc.setTextColor(...COLOR_EXPENSE);
+        doc.text('Expenses by Category:', PAGE_MARGIN + 5, y); y += 7;
+        for (const category in summaryData.expenseByCategory) {
+            doc.setTextColor(...COLOR_BLACK);
+            doc.text(category, PAGE_MARGIN + 10, y);
+            doc.setTextColor(...COLOR_EXPENSE);
+            doc.text(CURRENCY_SYMBOL, currencyX, y); // Split symbol and value
+            doc.text(summaryData.expenseByCategory[category].toFixed(2), valueX, y, { align: 'right' });
+            y += 7;
+        }
+        doc.setTextColor(...COLOR_BLACK);
+    }
+    
+    function addFooter(doc) { /* Unchanged */ const pageCount = doc.internal.getNumberOfPages(); for (let i = 1; i <= pageCount; i++) { doc.setPage(i); doc.setFontSize(10); doc.setTextColor(...COLOR_GRAY); if (i === pageCount) { doc.text(`Report Generated On: ${new Date().toLocaleString()}`, PAGE_MARGIN, PAGE_HEIGHT - 10); } } }
+
+    // --- UPDATED: generateDailyReport with precise currency alignment ---
+    function generateDailyReport() {
+        const reportDate = document.getElementById('report-date').value;
+        if (!reportDate) { alert('Please select a date.'); return; }
+        showLoading();
+        
+        transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+        const dailyTransactions = transactions.filter(t => t.date === reportDate);
+        if (dailyTransactions.length === 0) { alert('No transactions for the selected date.'); hideLoading(); return; }
+        
+        const summaryData = { date: reportDate, totalIncome: 0, totalExpenses: 0, activeCount: 0, cancelledCount: 0, incomeByCategory: {}, expenseByCategory: {} };
+        dailyTransactions.forEach(t => { if (t.status === 'undone') { summaryData.cancelledCount++; } else { summaryData.activeCount++; if (t.type === 'income') { summaryData.totalIncome += t.amount; summaryData.incomeByCategory[t.category] = (summaryData.incomeByCategory[t.category] || 0) + t.amount; } else { summaryData.totalExpenses += t.amount; summaryData.expenseByCategory[t.category] = (summaryData.expenseByCategory[t.category] || 0) + t.amount; } } });
+        
+        const doc = new jsPDF();
+        let y = drawPageHeader(doc, 'Daily Financial Report', reportDate);
+        doc.setDrawColor(...COLOR_LINE); doc.line(PAGE_MARGIN, y, PAGE_WIDTH - PAGE_MARGIN, y); y += 5;
+        
+        doc.setFontSize(16); doc.setFont('helvetica', 'bold'); doc.setTextColor(...COLOR_BLACK);
+        doc.text('Transactions:', PAGE_MARGIN, y); y += 8;
+
+        // Define separate coordinates for currency and value
+        const cols = { time: 20, cat: 50, type: 110, amt_currency: 160, amt_value: 195 };
+        const drawTableHeader = () => {
+            doc.setFontSize(10); doc.setFont('helvetica', 'bold'); doc.setTextColor(...COLOR_BLACK);
+            doc.text('Time', cols.time, y); doc.text('Category', cols.cat, y); doc.text('Type', cols.type, y);
+            doc.text('Amount', cols.amt_value, y, { align: 'right' }); // Header aligns with number
+            doc.line(PAGE_MARGIN, y + 2, PAGE_WIDTH - PAGE_MARGIN, y + 2); y += 7;
+        };
+        drawTableHeader();
+        
         dailyTransactions.forEach(t => {
-          // Check for page overflow before adding new line
-          if (y + 6 > pageHeight - margin) { // 6 is approx line height for new font size
-              addMainPageHeader(); // Add only main header on new page
-              // Re-add column headers on new page
-              doc.setFontSize(10);
-              doc.setFont('helvetica', 'bold');
-              doc.text('Time', col1X, y);
-              doc.text('Category', col2X, y);
-              doc.text('Type', col3X, y);
-              doc.text('Amount', col4X, y, null, null, 'right');
-              doc.line(10, y + 2, 200, y + 2);
-              y += 5; // Space after column headers
-              doc.setFontSize(10); // Reset font size for transaction details
-              doc.setFont('helvetica', 'normal');
-          }
-
-          let amountValue = t.amount.toFixed(2);
-          let amountText = `$${amountValue}`;
-          let typeText = t.type.toUpperCase();
-          let statusText = '';
-          let categoryText = t.category || 'N/A'; // Use N/A if no category
-
-          let textColor = [0, 0, 0]; // Default black
-          let isUndone = false;
-
-          if (t.status === 'undone') {
-            isUndone = true;
-            statusText = ' (CANCELLED)'; // Add to typeText if needed, or handle separately
-            textColor = [150, 150, 150]; // Gray for undone
-            undoneTransactionsCount++;
-          } else {
-            activeTransactionsCount++;
-            if (t.type === 'income') {
-              textColor = [52, 199, 89]; // Green for income
-              totalIncome += t.amount;
-              incomeByCategory[t.category] = (incomeByCategory[t.category] || 0) + t.amount;
-            } else {
-              textColor = [255, 59, 48]; // Red for expense
-              totalExpenses += t.amount;
-              expenseByCategory[t.category] = (expenseByCategory[t.category] || 0) + t.amount;
-            }
-          }
-
-          doc.setTextColor(textColor[0], textColor[1], textColor[2]);
-
-          // Print each column separately
-          doc.text(t.time, col1X, y);
-          doc.text(categoryText, col2X, y);
-          doc.text(typeText + statusText, col3X, y);
-          doc.text(amountText, col4X, y, null, null, 'right');
-
-          // Add strikethrough if undone
-          if (isUndone) {
-            const timeWidth = doc.getStringUnitWidth(t.time) * doc.internal.getFontSize() / doc.internal.scaleFactor;
-            const categoryWidth = doc.getStringUnitWidth(categoryText) * doc.internal.getFontSize() / doc.internal.scaleFactor;
-            const typeStatusWidth = doc.getStringUnitWidth(typeText + statusText) * doc.internal.getFontSize() / doc.internal.scaleFactor;
-            const amountWidth = doc.getStringUnitWidth(amountText) * doc.internal.getFontSize() / doc.internal.scaleFactor;
-
-            doc.line(col1X, y - 2, col1X + timeWidth, y - 2); // Strikethrough for time
-            doc.line(col2X, y - 2, col2X + categoryWidth, y - 2); // Strikethrough for category
-            doc.line(col3X, y - 2, col3X + typeStatusWidth, y - 2); // Strikethrough for type + status
-            doc.line(col4X - amountWidth, y - 2, col4X, y - 2); // Strikethrough for amount
-          }
-          doc.setTextColor(0, 0, 0); // Reset color to black for next line
-          y += 6; // Consistent line height (reduced from 7 to 6)
+            if (y > PAGE_HEIGHT - PAGE_MARGIN) { doc.addPage(); y = drawPageHeader(doc, 'Daily Financial Report', reportDate); drawTableHeader(); }
+            const isUndone = t.status === 'undone';
+            const color = isUndone ? COLOR_GRAY : (t.type === 'income' ? COLOR_INCOME : COLOR_EXPENSE);
+            doc.setTextColor(...color); doc.setFont('helvetica', 'normal');
+            doc.text(t.time, cols.time, y);
+            doc.text(t.category, cols.cat, y);
+            doc.text(t.type.toUpperCase() + (isUndone ? ' (CANCELLED)' : ''), cols.type, y);
+            
+            // Draw currency and value separately for alignment
+            doc.text(CURRENCY_SYMBOL, cols.amt_currency, y);
+            doc.text(t.amount.toFixed(2), cols.amt_value, y, { align: 'right' });
+            
+            if (isUndone) { const textWidth = doc.getStringUnitWidth(t.time) * doc.internal.getFontSize() / doc.internal.scaleFactor; doc.line(cols.time, y - 2, cols.time + textWidth, y - 2); }
+            y += 7;
         });
 
-        // Ensure enough space for summary or add new page
-        // Unconditional page break for Summary section
-        addMainPageHeader();
+        drawSummaryPage(doc, 'Daily Financial Report', summaryData);
+        addFooter(doc);
 
-        doc.line(10, y + 5, 200, y + 5); // Horizontal line before summary
-
-        // --- Summary Section ---
-        doc.setFontSize(14); // Reduced font size
-        doc.setFont('helvetica', 'bold');
-        doc.text('Summary:', 10, y + 15);
-
-        doc.setFontSize(12); // Reduced font size
-        doc.setFont('helvetica', 'normal');
-        const netProfit = totalIncome - totalExpenses;
-
-        doc.setTextColor(52, 199, 89);
-        doc.text(`Total Income: $${totalIncome.toFixed(2)}`, 15, y + 25);
-        doc.setTextColor(255, 59, 48);
-        doc.text(`Total Expenses: $${totalExpenses.toFixed(2)}`, 15, y + 35);
-
-        doc.setTextColor(0, 0, 0); // Reset to black
-        doc.setFontSize(14); // Reduced font size
-        doc.setFont('helvetica', 'bold');
-        doc.text(`Net Profit/Loss: $${netProfit.toFixed(2)}`, 15, y + 45);
-
-        doc.setFontSize(10); // Reduced font size
-        doc.setFont('helvetica', 'normal');
-        doc.text(`Active Transactions: ${activeTransactionsCount}`, 15, y + 55);
-        doc.text(`Cancelled Transactions: ${undoneTransactionsCount}`, 15, y + 62);
-
-        // --- Category Analytics ---
-        y = y + 70; // Move y down for new section
-        const categoryAnalyticsHeight = 50 + (Object.keys(incomeByCategory).length + Object.keys(expenseByCategory).length) * 7; // Estimate height
-        if (y + categoryAnalyticsHeight > pageHeight - margin) {
-            addMainPageHeader();
-        }
-        doc.line(10, y, 200, y); // Horizontal line
-        doc.setFontSize(14); // Reduced font size
-        doc.setFont('helvetica', 'bold');
-        doc.text('Category Breakdown:', 10, y + 10);
-
-        doc.setFontSize(10); // Reduced font size
-        doc.setFont('helvetica', 'normal');
-        y += 20;
-
-        // Income Categories
-        doc.setTextColor(52, 199, 89);
-        doc.text('Income by Category:', 15, y);
-        y += 6; // Reduced line height
-        for (const category in incomeByCategory) {
-            if (y + 6 > pageHeight - margin) { addMainPageHeader(); doc.setFontSize(10); doc.setFont('helvetica', 'normal'); doc.setTextColor(52, 199, 89); }
-            doc.text(`  ${category}: $${incomeByCategory[category].toFixed(2)}`, 15, y);
-            y += 6;
-        }
-        if (Object.keys(incomeByCategory).length === 0) {
-            if (y + 6 > pageHeight - margin) { addMainPageHeader(); doc.setFontSize(10); doc.setFont('helvetica', 'normal'); doc.setTextColor(52, 199, 89); }
-            doc.text('  No income categories.', 15, y);
-            y += 6;
-        }
-
-        y += 5; // Small gap
-
-        // Expense Categories
-        doc.setTextColor(255, 59, 48);
-        doc.text('Expenses by Category:', 15, y);
-        y += 6; // Reduced line height
-        for (const category in expenseByCategory) {
-            if (y + 6 > pageHeight - margin) { addMainPageHeader(); doc.setFontSize(10); doc.setFont('helvetica', 'normal'); doc.setTextColor(255, 59, 48); }
-            doc.text(`  ${category}: $${expenseByCategory[category].toFixed(2)}`, 15, y);
-            y += 6;
-        }
-        if (Object.keys(expenseByCategory).length === 0) {
-            if (y + 6 > pageHeight - margin) { addMainPageHeader(); doc.setFontSize(10); doc.setFont('helvetica', 'normal'); doc.setTextColor(255, 59, 48); }
-            doc.text('  No expense categories.', 15, y);
-            y += 6;
-        }
-        doc.setTextColor(0, 0, 0); // Reset color
-
-        // --- Report Generated On ---
-        doc.setFontSize(10);
-        doc.text(`Report Generated On: ${new Date().toLocaleString()}`, 10, doc.internal.pageSize.height - 10);
-
-        finalizePdfGeneration(doc, reportDate);
-
-      } catch (error) {
-        console.error("Error generating PDF:", error);
-        alert("An error occurred while generating the report. Please try again.");
+        const pdfBlob = doc.output('blob');
+        const fileName = `Daily-Report-${reportDate}.pdf`;
+        downloadDailyBtn.style.display = 'block';
+        downloadDailyBtn.onclick = () => downloadPdf(pdfBlob, fileName);
         hideLoading();
-      }
     }
 
-    document.getElementById('report-date').valueAsDate = new Date();
-  </script>
+    // --- UPDATED: generateMonthlyReport with precise currency alignment ---
+    function generateMonthlyReport() {
+        const reportMonth = document.getElementById('report-month').value;
+        if (!reportMonth) { alert('Please select a month.'); return; }
+        showLoading();
 
+        transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+        const activeMonthly = transactions.filter(t => t.date.startsWith(reportMonth) && t.status === 'active');
+        if (activeMonthly.length === 0) { alert('No active transactions for the selected month.'); hideLoading(); return; }
+        
+        const formattedMonth = new Date(reportMonth + '-02').toLocaleString('default', { month: 'long', year: 'numeric' });
+        
+        const dailySummaries = {};
+        activeMonthly.forEach(t => { if (!dailySummaries[t.date]) { dailySummaries[t.date] = { date: t.date, income: 0, expenses: 0, net: 0 }; } if (t.type === 'income') dailySummaries[t.date].income += t.amount; else dailySummaries[t.date].expenses += t.amount; });
+        const summaryArray = Object.values(dailySummaries).map(s => { s.net = s.income - s.expenses; return s; }).sort((a, b) => a.date.localeCompare(b.date));
+        const cancelledCount = transactions.filter(t => t.date.startsWith(reportMonth) && t.status === 'undone').length;
+        const summaryData = { date: formattedMonth, totalIncome: 0, totalExpenses: 0, activeCount: activeMonthly.length, cancelledCount, incomeByCategory: {}, expenseByCategory: {} };
+        activeMonthly.forEach(t => { if (t.type === 'income') { summaryData.totalIncome += t.amount; summaryData.incomeByCategory[t.category] = (summaryData.incomeByCategory[t.category] || 0) + t.amount; } else { summaryData.totalExpenses += t.amount; summaryData.expenseByCategory[t.category] = (summaryData.expenseByCategory[t.category] || 0) + t.amount; } });
+
+        const doc = new jsPDF();
+        let y = drawPageHeader(doc, 'Monthly Financial Report', formattedMonth);
+        doc.setDrawColor(...COLOR_LINE); doc.line(PAGE_MARGIN, y, PAGE_WIDTH - PAGE_MARGIN, y); y+= 5;
+        
+        doc.setFontSize(16); doc.setFont('helvetica', 'bold'); doc.setTextColor(...COLOR_BLACK);
+        doc.text('Daily Breakdown:', PAGE_MARGIN, y); y += 8;
+        
+        // Define separate coordinates for each column's currency and value
+        const cols = { date: 20, inc_curr: 60, inc_val: 85, exp_curr: 110, exp_val: 135, net_curr: 160, net_val: 195 };
+        const drawMonthlyTableHeader = () => {
+            doc.setFontSize(10); doc.setFont('helvetica', 'bold'); doc.setTextColor(...COLOR_BLACK);
+            doc.text('Date', cols.date, y);
+            doc.text('Income', cols.inc_val, y, {align: 'right'});
+            doc.text('Expenses', cols.exp_val, y, {align: 'right'});
+            doc.text('Net Profit/Loss', cols.net_val, y, {align: 'right'});
+            doc.line(PAGE_MARGIN, y + 2, PAGE_WIDTH - PAGE_MARGIN, y + 2); y += 7;
+        };
+        drawMonthlyTableHeader();
+
+        summaryArray.forEach(day => {
+            if (y > PAGE_HEIGHT - PAGE_MARGIN) { doc.addPage(); y = drawPageHeader(doc, 'Monthly Financial Report', formattedMonth); drawMonthlyTableHeader(); }
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(...COLOR_BLACK);
+            doc.text(day.date, cols.date, y);
+            
+            // Income
+            doc.setTextColor(...COLOR_INCOME);
+            doc.text(CURRENCY_SYMBOL, cols.inc_curr, y);
+            doc.text(day.income.toFixed(2), cols.inc_val, y, {align: 'right'});
+            
+            // Expenses
+            doc.setTextColor(...COLOR_EXPENSE);
+            doc.text(CURRENCY_SYMBOL, cols.exp_curr, y);
+            doc.text(day.expenses.toFixed(2), cols.exp_val, y, {align: 'right'});
+            
+            // Net
+            doc.setTextColor(...(day.net >= 0 ? COLOR_INCOME : COLOR_EXPENSE));
+            doc.text(CURRENCY_SYMBOL, cols.net_curr, y);
+            doc.text(day.net.toFixed(2), cols.net_val, y, {align: 'right'});
+            y += 7;
+        });
+
+        drawSummaryPage(doc, 'Monthly Financial Report', summaryData);
+        addFooter(doc);
+
+        const pdfBlob = doc.output('blob');
+        const fileName = `Monthly-Report-${reportMonth}.pdf`;
+        downloadMonthlyBtn.style.display = 'block';
+        downloadMonthlyBtn.onclick = () => downloadPdf(pdfBlob, fileName);
+        hideLoading();
+    }
+
+    // Set defaults
+    document.getElementById('report-date').valueAsDate = new Date();
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    document.getElementById('report-month').value = `${year}-${month}`;
+  </script>
 </body>
 </html>
