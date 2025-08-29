@@ -21,7 +21,10 @@
     .transaction-controls button:active { box-shadow: 0 1px 2px rgba(0,0,0,0.1); transform: translateY(1px); }
     .income { color: #34c759 !important; }
     .expense { color: #ff3b30 !important; }
-    .display { background-color: #fff; padding: 16px; text-align: right; font-size: 40px; font-weight: 300; border-bottom: 1px solid #d1d1d6; flex-shrink: 0; overflow-x: auto; white-space: nowrap; text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1); }
+    .display { display: flex; justify-content: space-between; align-items: center; background-color: #fff; padding: 16px; text-align: right; font-size: 40px; font-weight: 300; border-bottom: 1px solid #d1d1d6; flex-shrink: 0; overflow-x: auto; white-space: nowrap; text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1); }
+    #expression-display { font-size: 20px; color: #888; margin-right: 10px; flex-grow: 1; text-align: left; }
+    .keypad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; background-color: #d1d1d6; padding: 10px; border-top: 1px solid #ccc; flex-shrink: 0; }
+    .keypad .operator-btn { background-color: #ff9500; color: white; font-size: 24px; }
     .transaction-list { padding: 0; margin: 0; list-style: none; }
     .transaction-list li { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #e5e5ea; }
     .transaction-list li span:first-child { flex-grow: 1; }
@@ -47,7 +50,10 @@
   </div>
 
   <div class="main-content"> <ul class="transaction-list" id="transaction-list"></ul> </div>
-  <div class="display"> <span id="amount">0</span> </div>
+  <div class="display">
+    <span id="expression-display"></span>
+    <span id="amount">0</span>
+  </div>
   <div class="transaction-controls">
     <button class="income" id="income-btn">Income</button>
     <button class="expense" id="expense-btn">Expense</button>
@@ -56,20 +62,23 @@
     <button onclick="appendNumber('1')">1</button>
     <button onclick="appendNumber('2')">2</button>
     <button onclick="appendNumber('3')">3</button>
+    <button class="operator-btn" onclick="handleOperator('+')">+</button>
     <button onclick="appendNumber('4')">4</button>
     <button onclick="appendNumber('5')">5</button>
     <button onclick="appendNumber('6')">6</button>
+    <button class="operator-btn" onclick="handleOperator('-')">−</button>
     <button onclick="appendNumber('7')">7</button>
     <button onclick="appendNumber('8')">8</button>
     <button onclick="appendNumber('9')">9</button>
+    <button class="operator-btn" onclick="handleOperator('*')">×</button>
     <button onclick="appendNumber('.')">.</button>
     <button onclick="appendNumber('0')">0</button>
-    <!-- Simply replace your entire <button id="backspace-btn">...</button> with this -->
-<button id="backspace-btn">
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M22 3H7c-.69 0-1.23.35-1.59.88L0 12l5.41 8.11c.36.53.9.89 1.59.89h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-3 12.59L17.59 17 14 13.41 10.41 17 9 15.59 12.59 12 9 8.41 10.41 7 14 10.59 17.59 7 19 8.41 15.41 12 19 15.59z"></path>
-  </svg>
-</button>
+    <button id="backspace-btn">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M22 3H7c-.69 0-1.23.35-1.59.88L0 12l5.41 8.11c.36.53.9.89 1.59.89h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-3 12.59L17.59 17 14 13.41 10.41 17 9 15.59 12.59 12 9 8.41 10.41 7 14 10.59 17.59 7 19 8.41 15.41 12 19 15.59z"></path>
+      </svg>
+    </button>
+    <button class="operator-btn" onclick="handleOperator('/')">÷</button>
   </div>
   <div class="category-overlay" id="category-overlay" style="display: none;">
     <div class="category-modal">
@@ -81,6 +90,7 @@
 
   <script>
     const amountDisplay = document.getElementById('amount');
+    const expressionDisplay = document.getElementById('expression-display');
     const transactionList = document.getElementById('transaction-list');
     const undoBtn = document.getElementById('undo-btn');
     const categoryOverlay = document.getElementById('category-overlay');
@@ -91,28 +101,118 @@
     const backspaceBtn = document.getElementById('backspace-btn');
 
     const CURRENCY_SYMBOL = 'LKR';
-    let currentAmount = '0';
     let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
     let lastTransactionIdForUndo = null;
+
+    // Calculator state
+    let currentAmount = '0';
+    let firstOperand = null;
+    let operator = null;
+    let waitingForSecondOperand = false;
+    let calculationCompleted = false;
 
     const LONG_PRESS_THRESHOLD = 500;
     let longPressTimer;
     let isLongPress = false;
 
-    function backspace() { if (currentAmount.length > 1) { currentAmount = currentAmount.slice(0, -1); } else { currentAmount = '0'; } updateDisplay(); }
+    function backspace() {
+      if (calculationCompleted) return; // Don't allow backspace on a result
+      if (currentAmount.length > 1) {
+        currentAmount = currentAmount.slice(0, -1);
+      } else {
+        currentAmount = '0';
+      }
+      updateDisplay();
+    }
+
     function getLocalDateString() { const now = new Date(); return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`; }
     
-    // CRITICAL CHANGE: More robust function to get types, with safe defaults.
     function getTypes(type) {
         const defaultTypes = { income: ['Sales'], expense: ['Stock'] };
         const storedTypes = JSON.parse(localStorage.getItem(`${type}Types`));
-        // If stored types exist and are not empty, use them. Otherwise, use defaults.
         return (storedTypes && storedTypes.length > 0) ? storedTypes : defaultTypes[type];
     }
 
-    function appendNumber(number) { if (currentAmount === '0' && number !== '.') currentAmount = ''; if (number === '.' && currentAmount.includes('.')) return; currentAmount += number; updateDisplay(); }
-    function clearAmount() { currentAmount = '0'; updateDisplay(); }
-    function updateDisplay() { amountDisplay.textContent = currentAmount; }
+    function appendNumber(number) {
+        if (calculationCompleted) {
+            clearAmount();
+        }
+        if (waitingForSecondOperand) {
+            currentAmount = '';
+            waitingForSecondOperand = false;
+        }
+        if (currentAmount === '0' && number !== '.') currentAmount = '';
+        if (number === '.' && currentAmount.includes('.')) return;
+        
+        currentAmount += number;
+        calculationCompleted = false;
+        updateDisplay();
+    }
+
+    function clearAmount() {
+        currentAmount = '0';
+        firstOperand = null;
+        operator = null;
+        waitingForSecondOperand = false;
+        calculationCompleted = false;
+        expressionDisplay.textContent = '';
+        updateDisplay();
+    }
+
+    function updateDisplay() {
+        amountDisplay.textContent = currentAmount;
+        if (!calculationCompleted) {
+            expressionDisplay.textContent = operator ? `${firstOperand} ${operator}` : '';
+        }
+    }
+
+    function handleOperator(selectedOperator) {
+        if (operator && !waitingForSecondOperand) {
+            performCalculation();
+        }
+        firstOperand = parseFloat(currentAmount);
+        operator = selectedOperator;
+        waitingForSecondOperand = true;
+        calculationCompleted = false;
+        updateDisplay();
+    }
+
+    function performCalculation() {
+        if (operator === null || waitingForSecondOperand) {
+            return parseFloat(currentAmount);
+        }
+
+        const secondOperand = parseFloat(currentAmount);
+        let result = 0;
+
+        if (isNaN(firstOperand) || isNaN(secondOperand)) return NaN;
+
+        if (operator === '+') result = firstOperand + secondOperand;
+        else if (operator === '-') result = firstOperand - secondOperand;
+        else if (operator === '*') result = firstOperand * secondOperand;
+        else if (operator === '/') result = firstOperand / secondOperand;
+        
+        const resultString = String(parseFloat(result.toFixed(5)));
+        const shortExpression = `${firstOperand} ${operator} ${secondOperand}`;
+        const fullExpression = `${shortExpression} = ${resultString}`;
+
+        if (fullExpression.length > 40) {
+            expressionDisplay.textContent = shortExpression;
+        } else {
+            expressionDisplay.textContent = fullExpression;
+        }
+
+        currentAmount = resultString;
+        amountDisplay.textContent = currentAmount;
+
+        // Set state for chained calculations
+        firstOperand = result;
+        operator = null;
+        waitingForSecondOperand = false;
+        calculationCompleted = true;
+
+        return result;
+    }
 
     function startPress(type) { isLongPress = false; longPressTimer = setTimeout(() => { isLongPress = true; showCategorySelection(type); }, LONG_PRESS_THRESHOLD); }
     function endPress(type) { clearTimeout(longPressTimer); if (!isLongPress) { confirmTransaction(type, `General ${type.charAt(0).toUpperCase() + type.slice(1)}`); } }
@@ -125,14 +225,24 @@
     incomeBtn.addEventListener('touchend', () => endPress('income'));
     expenseBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startPress('expense'); }, { passive: false });
     expenseBtn.addEventListener('touchend', () => endPress('expense'));
+    
     backspaceBtn.addEventListener('mousedown', () => { isLongPress = false; longPressTimer = setTimeout(() => { isLongPress = true; clearAmount(); }, LONG_PRESS_THRESHOLD); });
     backspaceBtn.addEventListener('mouseup', () => { clearTimeout(longPressTimer); if (!isLongPress) { backspace(); } });
     backspaceBtn.addEventListener('touchstart', (e) => { e.preventDefault(); isLongPress = false; longPressTimer = setTimeout(() => { isLongPress = true; clearAmount(); }, LONG_PRESS_THRESHOLD); }, { passive: false });
     backspaceBtn.addEventListener('touchend', () => { clearTimeout(longPressTimer); if (!isLongPress) { backspace(); } });
 
     function showCategorySelection(type) {
-      const amount = parseFloat(currentAmount);
-      if (isNaN(amount) || amount === 0) { alert("Please enter an amount first."); return; }
+      let amount = parseFloat(currentAmount);
+      if (operator && !waitingForSecondOperand) {
+        const secondOperand = parseFloat(currentAmount);
+        if (operator === '+') amount = firstOperand + secondOperand;
+        else if (operator === '-') amount = firstOperand - secondOperand;
+        else if (operator === '*') amount = firstOperand * secondOperand;
+        else if (operator === '/') amount = firstOperand / secondOperand;
+      }
+      
+      if (isNaN(amount) || amount === 0) { alert("Please enter an amount or complete the calculation first."); return; }
+      
       categoryModalTitle.textContent = `Select ${type === 'income' ? 'Income' : 'Expense'} Category`;
       categoryButtonsContainer.innerHTML = '';
       const types = getTypes(type);
@@ -146,7 +256,38 @@
     }
 
     function hideCategorySelection() { categoryOverlay.style.display = 'none'; }
-    function confirmTransaction(type, category) { const amount = parseFloat(currentAmount); if (isNaN(amount) || amount <= 0) return; const transaction = { id: Date.now(), type, amount, category, date: getLocalDateString(), time: new Date().toLocaleTimeString(), status: 'active' }; lastTransactionIdForUndo = transaction.id; transactions.push(transaction); localStorage.setItem('transactions', JSON.stringify(transactions)); clearAmount(); renderTransactions(); updateUndoButton(); hideCategorySelection(); const btn = document.querySelector(`.${type}`); btn.style.backgroundColor = type === 'income' ? '#d4edda' : '#f8d7da'; setTimeout(() => { btn.style.backgroundColor = '#fff'; }, 300); }
+    
+    function confirmTransaction(type, category) {
+        const amount = performCalculation();
+
+        if (isNaN(amount) || amount <= 0) {
+            // Maybe the user just entered a number without calculation
+            const singleAmount = parseFloat(currentAmount);
+            if (isNaN(singleAmount) || singleAmount <= 0) {
+                clearAmount();
+                return;
+            }
+            // If it was a valid single number, create the transaction
+            const transaction = { id: Date.now(), type, amount: singleAmount, category, date: getLocalDateString(), time: new Date().toLocaleTimeString(), status: 'active' };
+            lastTransactionIdForUndo = transaction.id;
+            transactions.push(transaction);
+        } else {
+            // If a calculation was performed, use that amount
+            const transaction = { id: Date.now(), type, amount, category, date: getLocalDateString(), time: new Date().toLocaleTimeString(), status: 'active' };
+            lastTransactionIdForUndo = transaction.id;
+            transactions.push(transaction);
+        }
+
+        localStorage.setItem('transactions', JSON.stringify(transactions));
+        clearAmount();
+        renderTransactions();
+        updateUndoButton();
+        hideCategorySelection();
+        const btn = document.querySelector(`.${type}`);
+        btn.style.backgroundColor = type === 'income' ? '#d4edda' : '#f8d7da';
+        setTimeout(() => { btn.style.backgroundColor = '#fff'; }, 300);
+    }
+
     function undoLastTransaction() { if (!lastTransactionIdForUndo) return; const transactionToUndo = transactions.find(t => t.id === lastTransactionIdForUndo); if (transactionToUndo) { transactionToUndo.status = 'undone'; lastTransactionIdForUndo = null; localStorage.setItem('transactions', JSON.stringify(transactions)); renderTransactions(); updateUndoButton(); alert('Last transaction undone.'); } }
     function renderTransactions() { transactionList.innerHTML = ''; const todayTransactions = transactions.filter(t => t.date === getLocalDateString() && t.status === 'active').sort((a, b) => b.id - a.id); for (const transaction of todayTransactions) { const li = document.createElement('li'); li.className = transaction.type; li.innerHTML = `<span>${transaction.time} - ${transaction.category}</span><span>${CURRENCY_SYMBOL} ${transaction.amount.toFixed(2)}</span>`; transactionList.appendChild(li); } }
     function updateUndoButton() { undoBtn.disabled = !lastTransactionIdForUndo; }
