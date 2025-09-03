@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Select Category</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      margin: 0;
+      padding: 0;
+    }
+
+    .header {
+        display: flex;
+        align-items: center;
+        padding: 16px;
+        background: white;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .header .back-arrow {
+        font-size: 24px;
+        color: #333;
+        cursor: pointer;
+        margin-right: 16px;
+    }
+
+    .header h1 {
+        font-size: 18px;
+        font-weight: 600;
+        color: #333;
+        margin: 0;
+        flex-grow: 1;
+        text-align: center;
+        transform: translateX(-12px); /* Adjust for back arrow */
+    }
+
+    .container {
+      padding: 16px;
+    }
+    
+    .container h2 {
+        font-size: 22px;
+        color: #333;
+        margin-top: 0;
+        margin-bottom: 8px;
+    }
+
+    .container p.description {
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 24px;
+    }
+    
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+    
+    .card {
+      background: white;
+      border-radius: 12px;
+      text-align: center;
+      padding: 16px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .card img {
+      width: 50px;
+      margin-bottom: 8px;
+    }
+
+    /* Adjusted card paragraph style */
+    .card p {
+        margin: 0;
+        font-size: 14px;
+        font-weight: bold;
+        color: #333;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+      <span class="back-arrow" onclick="history.back()">&lt;</span>
+      <h1>Select Category</h1>
+  </div>
+
+  <div class="container">
+    <h2>Select a Category</h2>
+    <p class="description">Please choose a category to save your warranty under.</p>
+
+    <div class="grid">
+      <div class="card" onclick="selectCategory('Electronics')">
+        <img src="icons/electronics.svg" alt="Electronics">
+        <p>Electronics</p>
+      </div>
+      <div class="card" onclick="selectCategory('Home & Garden')">
+        <img src="icons/home.svg" alt="Home & Garden">
+        <p>Home & Garden</p>
+      </div>
+      <div class="card" onclick="selectCategory('Tools & Machinery')">
+        <img src="icons/tools.svg" alt="Tools & Machinery">
+        <p>Tools & Machinery</p>
+      </div>
+      <div class="card" onclick="selectCategory('Vehicle')">
+        <img src="icons/vehicle.svg" alt="Vehicle">
+        <p>Vehicle</p>
+      </div>
+      <div class="card" onclick="selectCategory('Toys & Sport')">
+        <img src="icons/toys.svg" alt="Toys & Sport">
+        <p>Toys & Sport</p>
+      </div>
+      <div class="card" onclick="selectCategory('Fashion & Beauty')">
+        <img src="icons/fashion.svg" alt="Fashion & Beauty">
+        <p>Fashion & Beauty</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function selectCategory(categoryName) {
+      // In a real application, you would save the warranty data with the selected category.
+      // This is a simulation of that action.
+      alert(`Warranty saved under the "${categoryName}" category!`);
+      
+      // Redirect the user back to the main products page.
+      window.location.href = 'products.html';
+    }
+  </script>
+
+</body>
+</html>
