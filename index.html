@@ -6,26 +6,14 @@
   <link rel="manifest" href="/Headsup/manifest.json">
   <title>E Trust</title>
   
-  <!-- Icon for browser tabs/bookmarks -->
   <link rel="icon" href="icon-512.png" type="image/png" sizes="512x512">
-  <!-- Apple Touch Icon for iOS home screen -->
   <link rel="apple-touch-icon" href="icon-512.png">
 
   <style>
-    /* CSS is unchanged and correct */
-    body { margin: 0; font-family: -apple-system, BlinkMacMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #f9f9f9; --header-height: 73px; --nav-height: 61px; }
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #f9f9f9; --header-height: 73px; --nav-height: 61px; }
     header { display: flex; justify-content: space-between; align-items: center; padding: 16px; background: white; border-bottom: 1px solid #ddd; box-sizing: border-box; height: var(--header-height); }
     .left-header { display: flex; align-items: center; gap: 10px; }
-    
-    /* --- NEW CSS for the clickable link --- */
-    #welcome-link {
-        text-decoration: none; /* Remove underline from the link */
-        color: inherit; /* Make the text color normal */
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-    
+    #welcome-link { text-decoration: none; color: inherit; display: flex; align-items: center; gap: 10px; }
     .avatar { width: 40px; height: 40px; background: #ccc; border-radius: 50%; }
     .welcome-text { font-size: 14px; color: #888; }
     .trust-blue { color: #1a73e8; }
@@ -43,18 +31,28 @@
     #dropdown-menu a { display: block; padding: 12px 16px; text-decoration: none; color: #333; font-size: 14px; }
     #dropdown-menu a:hover { background-color: #f5f5f5; }
     #dropdown-menu.show { display: block; }
+
+    /* --- NEW: CSS for the mandatory name modal --- */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); display: none; justify-content: center; align-items: center; z-index: 2000; }
+    .modal-overlay.show { display: flex; }
+    .modal-content { background: white; padding: 24px; border-radius: 16px; width: 85%; max-width: 400px; text-align: center; }
+    .modal-content h3 { margin-top: 0; font-size: 18px; }
+    .modal-content p { color: #666; font-size: 14px; margin-bottom: 16px; }
+    .modal-content input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+    #name-error { color: #e53e3e; font-size: 12px; text-align: left; height: 15px; margin-bottom: 5px; }
+    .modal-save-btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; background-color: #007aff; color: white; margin-top: 10px; }
   </style>
 </head>
 <body>
 
   <header id="app-header">
     <div class="left-header">
-      <!-- --- CRITICAL CHANGE: The entire block is now a link --- -->
       <a href="#" id="welcome-link">
         <div class="avatar"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#a0aec0"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></div>
         <div>
           <div class="welcome-text">Welcome to <span class="trust-blue">E Trust</span></div>
-          <div class="username">Consumer Name</div>
+          <!-- The user's name will be injected here -->
+          <div class="username" id="username-display">Consumer Name</div>
         </div>
       </a>
     </div>
@@ -81,38 +79,84 @@
     <div onclick="loadTab('headsup.html')"><span>🔔</span>HeadsUp</div>
   </div>
 
+  <!-- --- NEW: Modal for collecting user's name --- -->
+  <div class="modal-overlay" id="nameModal">
+      <div class="modal-content">
+          <h3>Welcome!</h3>
+          <p>To personalize your experience, please enter your name.</p>
+          <div id="name-error"></div>
+          <input type="text" id="firstNameModalInput" placeholder="First Name">
+          <input type="text" id="lastNameModalInput" placeholder="Last Name">
+          <button class="modal-save-btn" id="saveNameBtn">Save and Continue</button>
+      </div>
+  </div>
+
   <script>
     const mainFrame = document.getElementById("main-frame");
     const nav = document.getElementById("bottom-nav");
+    const menuToggle = document.getElementById('menu-toggle');
+    const dropdownMenu = document.getElementById('dropdown-menu');
+    const profileLink = document.getElementById('profile-link');
+    const logoutLink = document.getElementById('logout-link');
+    const welcomeLink = document.getElementById('welcome-link');
     
-    let navHeight = 0;
+    // --- NEW: Logic for checking user name on load ---
+    const usernameDisplay = document.getElementById('username-display');
+    const nameModal = document.getElementById('nameModal');
+    const saveNameBtn = document.getElementById('saveNameBtn');
+    const firstNameModalInput = document.getElementById('firstNameModalInput');
+    const lastNameModalInput = document.getElementById('lastNameModalInput');
+    const nameError = document.getElementById('name-error');
+
+    function initializeUser() {
+        const firstName = localStorage.getItem('userFirstName');
+        const lastName = localStorage.getItem('userLastName');
+
+        if (firstName && lastName) {
+            // If name exists, display it in the header
+            usernameDisplay.textContent = `${firstName} ${lastName}`;
+        } else {
+            // If name does not exist, show the mandatory modal
+            nameModal.classList.add('show');
+        }
+    }
+
+    saveNameBtn.addEventListener('click', () => {
+        const firstName = firstNameModalInput.value.trim();
+        const lastName = lastNameModalInput.value.trim();
+
+        if (firstName === '' || lastName === '') {
+            nameError.textContent = 'Both names are required.';
+            return;
+        }
+
+        // Save to localStorage
+        localStorage.setItem('userFirstName', firstName);
+        localStorage.setItem('userLastName', lastName);
+
+        // Update header and hide modal
+        usernameDisplay.textContent = `${firstName} ${lastName}`;
+        nameModal.classList.remove('show');
+    });
+    // --- End of new logic ---
+
 
     function loadTab(page) {
       mainFrame.src = page;
     }
 
-    const menuToggle = document.getElementById('menu-toggle');
-    const dropdownMenu = document.getElementById('dropdown-menu');
-    const profileLink = document.getElementById('profile-link');
-    const logoutLink = document.getElementById('logout-link');
-    // --- NEW: Get the welcome link ---
-    const welcomeLink = document.getElementById('welcome-link');
-
-    // Handle clicks on the welcome area
-    welcomeLink.addEventListener('click', function(event) {
-        event.preventDefault(); // Prevent default link behavior
-        loadTab('profile.html');
+    welcomeLink.addEventListener('click', (event) => {
+        event.preventDefault();
+        loadTab('profile.html'); // Corrected to match the filename you are using
     });
 
-    // Handle "Profile Settings" click from dropdown
-    profileLink.addEventListener('click', function(event) {
+    profileLink.addEventListener('click', (event) => {
         event.preventDefault();
-        loadTab('profile.html');
+        loadTab('profile.html'); // Corrected to match the filename you are using
         dropdownMenu.classList.remove('show');
     });
 
-    // Handle "Log Out" click from dropdown
-    logoutLink.addEventListener('click', function(event) {
+    logoutLink.addEventListener('click', (event) => {
         event.preventDefault();
         alert('Log Out clicked!');
         dropdownMenu.classList.remove('show');
@@ -125,16 +169,18 @@
         const header = document.getElementById("app-header");
         const root = document.documentElement;
         const headerHeight = header.offsetHeight;
-        navHeight = nav.offsetHeight;
+        const navHeight = nav.offsetHeight;
         root.style.setProperty('--header-height', `${headerHeight}px`);
         root.style.setProperty('--nav-height', `${navHeight}px`);
+
+        // Run the user check as soon as the DOM is ready
+        initializeUser();
+
         mainFrame.onload = function() {
             const message = { type: 'setNavHeight', height: navHeight };
             mainFrame.contentWindow.postMessage(message, '*');
         };
     });
   </script>
-  
-  <!-- Other scripts (service worker, install prompt) are unchanged -->
 </body>
 </html>
