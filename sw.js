@@ -1,6 +1,6 @@
 self.addEventListener('install', e => {
   e.waitUntil(caches.open('heads-up-cache').then(cache =>
-    cache.addAll(['/Headsup/', '/Headsup/index.html', '/Headsup/icons/icon-192.png'])
+    cache.addAll(['/BA-Prototype/', 'BA-Prototype/index.html', '/BA-Prototype/icons/icon-192.png'])
   ));
 });
 
