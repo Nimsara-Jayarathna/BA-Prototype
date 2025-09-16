@@ -14,7 +14,7 @@
     .header-nav button span { font-size: 10px; font-weight: 500; margin-top: 2px; color: #007aff; }
     #end-session-btn svg, #end-session-btn span { fill: #ff3b30; color: #ff3b30; }
     .undo-btn:disabled svg, .undo-btn:disabled span { fill: #d1d1d6; color: #d1d1d6; }
-    .main-content { flex: 1; overflow-y: auto; padding: 0; }
+    .main-content { flex: 1; overflow-y: auto; padding-bottom: 80px; }
     .summary-container { position: sticky; top: 0; z-index: 10; background-color: #f2f2f7; padding: 20px 20px 0 20px; }
     .summary-item-wrapper { display: flex; background-color: #fff; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid #e5e5ea; overflow: hidden; width: 100%; margin-bottom: 20px; }
     .summary-item { text-align: center; flex: 1; padding: 12px 8px; }
@@ -28,20 +28,30 @@
     .transaction-list li { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #e5e5ea; }
     .transaction-list li span:first-child { flex-grow: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
     .transaction-list li span:last-child { text-align: right; min-width: 90px; }
-    .display { display: flex; justify-content: space-between; align-items: center; background-color: #fff; padding: 16px; text-align: right; font-size: 40px; font-weight: 300; border-bottom: 1px solid #d1d1d6; flex-shrink: 0; overflow-x: auto; white-space: nowrap; text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1); }
-    #expression-display { font-size: 20px; color: #888; margin-right: 10px; flex-grow: 1; text-align: left; }
-    .transaction-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 16px; background-color: #f2f2f7; flex-shrink: 0; }
-    .transaction-controls button { background-color: #fff; border: none; font-size: 18px; padding: 16px 0; text-align: center; font-weight: 600; border-radius: 10px; box-shadow: 0 3px 5px rgba(0,0,0,0.1); transition: all 0.1s ease-in-out; }
-    .transaction-controls button:active { box-shadow: 0 1px 2px rgba(0,0,0,0.1); transform: translateY(1px); }
-    .income { color: #34c759 !important; }
-    .expense { color: #ff3b30 !important; }
-    .keypad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; background-color: #d1d1d6; padding: 10px; border-top: 1px solid #ccc; flex-shrink: 0; }
+    .footer-nav { position: fixed; bottom: 0; left: 0; right: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px 16px; padding-bottom: calc(10px + env(safe-area-inset-bottom)); background-color: #f2f2f7; border-top: 1px solid #d1d1d6; z-index: 20; }
+    .footer-nav button { border: none; font-size: 18px; padding: 16px 0; text-align: center; font-weight: 600; border-radius: 10px; box-shadow: 0 3px 5px rgba(0,0,0,0.1); transition: all 0.1s ease-in-out; }
+    .footer-nav button:active { box-shadow: 0 1px 2px rgba(0,0,0,0.1); transform: translateY(1px); }
+    .income { color: #34c759 !important; background-color: #fff; }
+    .expense { color: #ff3b30 !important; background-color: #fff; }
+    /* Keypad Styles */
+    .keypad-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: flex-end; z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s ease-in-out; }
+    .keypad-overlay.visible { opacity: 1; pointer-events: auto; }
+    .keypad-modal { background-color: #f2f2f7; width: 100%; padding: 10px 10px calc(15px + env(safe-area-inset-bottom)) 10px; border-top-left-radius: 20px; border-top-right-radius: 20px; box-shadow: 0 -5px 15px rgba(0,0,0,0.2); transform: translateY(100%); transition: transform 0.3s ease-out; }
+    .keypad-overlay.visible .keypad-modal { transform: translateY(0); }
+    /* New Display Box Inside Pop-up */
+    .keypad-display-container { background-color: #fff; border-radius: 12px; padding: 16px; margin-bottom: 12px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); text-align: right; border: 1px solid #e5e5ea; }
+    #keypad-expression-display { font-size: 16px; color: #888; height: 20px; display: block; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    #keypad-amount { font-size: 42px; font-weight: 300; letter-spacing: 0.5px; color: #000; line-height: 1.1; overflow-x: auto; white-space: nowrap; }
+    .keypad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
     .keypad button { background-color: #fff; border: none; font-size: 20px; padding: 12px 0; text-align: center; color: #000; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.1s ease-in-out; }
     .keypad button:active { background-color: #e5e5ea; box-shadow: 0 1px 2px rgba(0,0,0,0.1); transform: translateY(1px); }
     .keypad .operator-btn { background-color: #ff9500; color: white; font-size: 24px; }
     #backspace-btn { background-color: #d1d1d6; font-size: 24px; color: #555; }
     #backspace-btn svg { width: 28px; height: 28px; vertical-align: middle; pointer-events: none; }
-    .category-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+    .add-btn { width: 100%; background-color: #007aff; color: white; border: none; font-size: 20px; font-weight: 600; padding: 15px 0; text-align: center; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-top: 10px; transition: background-color 0.2s; }
+    .add-btn:active { background-color: #005ecb; }
+    /* Category Modal Styles */
+    .category-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 1001; }
     .category-modal { background-color: #fff; padding: 20px; border-radius: 10px; width: 90%; max-width: 400px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
     .category-modal h3 { margin-top: 0; margin-bottom: 15px; font-size: 20px; text-align: center; }
     .category-buttons { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 15px; }
@@ -50,7 +60,6 @@
     .custom-category-group { display: flex; gap: 10px; margin-top: 15px; margin-bottom: 15px; }
     #custom-category-input { flex-grow: 1; padding: 12px; font-size: 16px; border: 1px solid #d1d1d6; border-radius: 8px; }
     #add-custom-category-btn { padding: 12px 20px; font-size: 16px; background-color: #007aff; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: background-color 0.2s; }
-    #add-custom-category-btn:active { background-color: #005ecb; }
   </style>
 </head>
 <body>
@@ -62,7 +71,7 @@
         <span>Reports</span>
       </button>
       <button onclick="window.parent.loadTab('settings.html', window.parent.document.getElementById('nav-settings'))">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61-.25-1.17-.59-1.69-.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69-.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z" /></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61-.25-1.17-.59-1.69-.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12-.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69-.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59-1.69-.98l2.49 1c.23-.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z" /></svg>
         <span>Settings</span>
       </button>
     </div>
@@ -89,15 +98,27 @@
       <ul class="transaction-list" id="transaction-list"></ul>
   </div>
   
-  <div class="display"> <span id="expression-display"></span> <span id="amount">0</span> </div>
-  <div class="transaction-controls"> <button class="income" id="income-btn">Income</button> <button class="expense" id="expense-btn">Expense</button> </div>
-  <div class="keypad">
-    <button onclick="appendNumber('1')">1</button> <button onclick="appendNumber('2')">2</button> <button onclick="appendNumber('3')">3</button> <button class="operator-btn" onclick="handleOperator('+')">+</button>
-    <button onclick="appendNumber('4')">4</button> <button onclick="appendNumber('5')">5</button> <button onclick="appendNumber('6')">6</button> <button class="operator-btn" onclick="handleOperator('-')">−</button>
-    <button onclick="appendNumber('7')">7</button> <button onclick="appendNumber('8')">8</button> <button onclick="appendNumber('9')">9</button> <button class="operator-btn" onclick="handleOperator('*')">×</button>
-    <button onclick="appendNumber('.')">.</button> <button onclick="appendNumber('0')">0</button>
-    <button id="backspace-btn"> <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M22 3H7c-.69 0-1.23.35-1.59.88L0 12l5.41 8.11c.36.53.9.89 1.59.89h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-3 12.59L17.59 17 14 13.41 10.41 17 9 15.59 12.59 12 9 8.41 10.41 7 14 10.59 17.59 7 19 8.41 15.41 12 19 15.59z"></path></svg> </button>
-    <button class="operator-btn" onclick="handleOperator('/')">÷</button>
+  <div class="footer-nav">
+      <button class="income" id="income-btn">Income</button>
+      <button class="expense" id="expense-btn">Expense</button>
+  </div>
+
+  <div class="keypad-overlay" id="keypad-overlay">
+    <div class="keypad-modal">
+        <div class="keypad-display-container">
+            <span id="keypad-expression-display"></span>
+            <div id="keypad-amount">0</div>
+        </div>
+        <div class="keypad">
+            <button onclick="appendNumber('1')">1</button> <button onclick="appendNumber('2')">2</button> <button onclick="appendNumber('3')">3</button> <button class="operator-btn" onclick="handleOperator('+')">+</button>
+            <button onclick="appendNumber('4')">4</button> <button onclick="appendNumber('5')">5</button> <button onclick="appendNumber('6')">6</button> <button class="operator-btn" onclick="handleOperator('-')">−</button>
+            <button onclick="appendNumber('7')">7</button> <button onclick="appendNumber('8')">8</button> <button onclick="appendNumber('9')">9</button> <button class="operator-btn" onclick="handleOperator('*')">×</button>
+            <button onclick="appendNumber('.')">.</button> <button onclick="appendNumber('0')">0</button>
+            <button id="backspace-btn"> <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M22 3H7c-.69 0-1.23.35-1.59.88L0 12l5.41 8.11c.36.53.9.89 1.59.89h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-3 12.59L17.59 17 14 13.41 10.41 17 9 15.59 12.59 12 9 8.41 10.41 7 14 10.59 17.59 7 19 8.41 15.41 12 19 15.59z"></path></svg> </button>
+            <button class="operator-btn" onclick="handleOperator('/')">÷</button>
+        </div>
+        <button class="add-btn" id="add-btn">Add</button>
+    </div>
   </div>
   
   <div class="category-overlay" id="category-overlay" style="display: none;">
@@ -116,8 +137,6 @@
     const totalIncomeDisplay = document.getElementById('total-income');
     const totalExpensesDisplay = document.getElementById('total-expenses');
     const subtotalDisplay = document.getElementById('subtotal');
-    const amountDisplay = document.getElementById('amount');
-    const expressionDisplay = document.getElementById('expression-display');
     const transactionList = document.getElementById('transaction-list');
     const undoBtn = document.getElementById('undo-btn');
     const categoryOverlay = document.getElementById('category-overlay');
@@ -125,9 +144,14 @@
     const categoryButtonsContainer = document.getElementById('category-buttons');
     const incomeBtn = document.getElementById('income-btn');
     const expenseBtn = document.getElementById('expense-btn');
-    const backspaceBtn = document.getElementById('backspace-btn');
     const customCategoryInput = document.getElementById('custom-category-input');
     const addCustomCategoryBtn = document.getElementById('add-custom-category-btn');
+    const keypadOverlay = document.getElementById('keypad-overlay');
+    const addTransactionBtn = document.getElementById('add-btn');
+    const backspaceBtn = document.getElementById('backspace-btn');
+    // ** UPDATED: Point to new display elements inside the pop-up **
+    const amountDisplay = document.getElementById('keypad-amount');
+    const expressionDisplay = document.getElementById('keypad-expression-display');
 
     const CURRENCY_SYMBOL = 'LKR';
     let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
@@ -137,79 +161,107 @@
     let operator = null;
     let waitingForSecondOperand = false;
     let calculationCompleted = false;
-    let pendingTransactionType = null;
+    let pendingTransaction = null; 
     const LONG_PRESS_THRESHOLD = 500;
     let longPressTimer;
     let isLongPress = false;
-    
-    // == MODIFIED: Removed sessionEnded, using sessionStartId instead ==
     let sessionStartId = 0;
 
-    // ... (rest of the functions: backspace, getLocalDateString, etc. are unchanged)
+    // --- Core Keypad & Calculation Functions ---
     function backspace() { if (calculationCompleted) return; currentAmount = (currentAmount.length > 1) ? currentAmount.slice(0, -1) : '0'; updateDisplay(); }
-    function getLocalDateString() { const now = new Date(); return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`; }
-    function getTypes(type) { const defaultTypes = { income: ['Sales'], expense: ['Stock'] }; const storedTypes = JSON.parse(localStorage.getItem(`${type}Types`)); return (storedTypes && storedTypes.length > 0) ? storedTypes : defaultTypes[type]; }
     function appendNumber(number) { if (calculationCompleted) clearAmount(); if (waitingForSecondOperand) { currentAmount = ''; waitingForSecondOperand = false; } if (currentAmount === '0' && number !== '.') currentAmount = ''; if (number === '.' && currentAmount.includes('.')) return; currentAmount += number; calculationCompleted = false; updateDisplay(); }
     function clearAmount() { currentAmount = '0'; firstOperand = null; operator = null; waitingForSecondOperand = false; calculationCompleted = false; expressionDisplay.textContent = ''; updateDisplay(); }
     function updateDisplay() { amountDisplay.textContent = currentAmount; if (!calculationCompleted) expressionDisplay.textContent = operator ? `${firstOperand} ${operator}` : ''; }
     function handleOperator(selectedOperator) { if (operator && !waitingForSecondOperand) performCalculation(); firstOperand = parseFloat(currentAmount); operator = selectedOperator; waitingForSecondOperand = true; calculationCompleted = false; updateDisplay(); }
     function performCalculation() { if (operator === null || waitingForSecondOperand) return parseFloat(currentAmount); const secondOperand = parseFloat(currentAmount); if (isNaN(firstOperand) || isNaN(secondOperand)) return NaN; let result = 0; if (operator === '+') result = firstOperand + secondOperand; else if (operator === '-') result = firstOperand - secondOperand; else if (operator === '*') result = firstOperand * secondOperand; else if (operator === '/') result = firstOperand / secondOperand; const resultString = String(parseFloat(result.toFixed(5))); const shortExpression = `${firstOperand} ${operator} ${secondOperand}`; const fullExpression = `${shortExpression} = ${resultString}`; expressionDisplay.textContent = (fullExpression.length > 40) ? shortExpression : fullExpression; currentAmount = resultString; amountDisplay.textContent = currentAmount; firstOperand = result; operator = null; waitingForSecondOperand = false; calculationCompleted = true; return result; }
-    function startPress(type) { isLongPress = false; longPressTimer = setTimeout(() => { isLongPress = true; showCategorySelection(type); }, LONG_PRESS_THRESHOLD); }
-    function endPress(type) { clearTimeout(longPressTimer); if (!isLongPress) confirmTransaction(type, `General ${type.charAt(0).toUpperCase() + type.slice(1)}`); }
-    incomeBtn.addEventListener('mousedown', () => startPress('income'));
-    incomeBtn.addEventListener('mouseup', () => endPress('income'));
-    expenseBtn.addEventListener('mousedown', () => startPress('expense'));
-    expenseBtn.addEventListener('mouseup', () => endPress('expense'));
-    incomeBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startPress('income'); }, { passive: false });
-    incomeBtn.addEventListener('touchend', () => endPress('income'));
-    expenseBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startPress('expense'); }, { passive: false });
-    expenseBtn.addEventListener('touchend', () => endPress('expense'));
-    backspaceBtn.addEventListener('mousedown', () => { isLongPress = false; longPressTimer = setTimeout(() => { isLongPress = true; clearAmount(); }, LONG_PRESS_THRESHOLD); });
-    backspaceBtn.addEventListener('mouseup', () => { clearTimeout(longPressTimer); if (!isLongPress) backspace(); });
-    backspaceBtn.addEventListener('touchstart', (e) => { e.preventDefault(); isLongPress = false; longPressTimer = setTimeout(() => { isLongPress = true; clearAmount(); }, LONG_PRESS_THRESHOLD); }, { passive: false });
-    backspaceBtn.addEventListener('touchend', () => { clearTimeout(longPressTimer); if (!isLongPress) backspace(); });
-    addCustomCategoryBtn.addEventListener('click', () => { const customCategory = customCategoryInput.value.trim(); if (customCategory === '') return alert('Please enter a name for your custom category.'); if (pendingTransactionType) confirmTransaction(pendingTransactionType, customCategory); });
-    function showCategorySelection(type) { let amount = parseFloat(currentAmount); if (operator && !waitingForSecondOperand) { const secondOperand = parseFloat(currentAmount); if (operator === '+') amount = firstOperand + secondOperand; else if (operator === '-') amount = firstOperand - secondOperand; else if (operator === '*') amount = firstOperand * secondOperand; else if (operator === '/') amount = firstOperand / secondOperand; } if (isNaN(amount) || amount === 0) return alert("Please enter an amount or complete the calculation first."); pendingTransactionType = type; categoryModalTitle.textContent = `Select ${type === 'income' ? 'Income' : 'Expense'} Category`; categoryButtonsContainer.innerHTML = ''; getTypes(type).forEach(cat => { const button = document.createElement('button'); button.textContent = cat; button.onclick = () => confirmTransaction(type, cat); categoryButtonsContainer.appendChild(button); }); categoryOverlay.style.display = 'flex'; }
-    function hideCategorySelection() { categoryOverlay.style.display = 'none'; customCategoryInput.value = ''; pendingTransactionType = null; }
     
-    function confirmTransaction(type, category) {
+    // --- Transaction Flow ---
+    function startPress(type) { isLongPress = false; longPressTimer = setTimeout(() => { isLongPress = true; showCategorySelection(type); }, LONG_PRESS_THRESHOLD); }
+    function endPress(type) { clearTimeout(longPressTimer); if (!isLongPress) { const defaultCategory = `General ${type.charAt(0).toUpperCase() + type.slice(1)}`; setPendingTransactionAndShowKeypad(type, defaultCategory); } }
+    
+    function setPendingTransactionAndShowKeypad(type, category) {
+        pendingTransaction = { type, category };
+        hideCategorySelection();
+        showKeypad();
+    }
+
+    function showKeypad() {
+        keypadOverlay.style.pointerEvents = 'auto';
+        keypadOverlay.classList.add('visible');
+    }
+
+    function hideKeypad() {
+        keypadOverlay.classList.remove('visible');
+        setTimeout(() => { keypadOverlay.style.pointerEvents = 'none'; }, 300); // Match transition time
+    }
+    
+    function showCategorySelection(type) {
+        pendingTransaction = { type, category: null };
+        categoryModalTitle.textContent = `Select ${type === 'income' ? 'Income' : 'Expense'} Category`;
+        categoryButtonsContainer.innerHTML = '';
+        getTypes(type).forEach(cat => {
+            const button = document.createElement('button');
+            button.textContent = cat;
+            button.onclick = () => setPendingTransactionAndShowKeypad(type, cat);
+            categoryButtonsContainer.appendChild(button);
+        });
+        categoryOverlay.style.display = 'flex';
+    }
+    
+    function hideCategorySelection() {
+        categoryOverlay.style.display = 'none';
+        customCategoryInput.value = '';
+    }
+
+    function finalizeTransaction() {
+        if (!pendingTransaction) return; 
         let amount = performCalculation();
         if (isNaN(amount) || amount <= 0) amount = parseFloat(currentAmount);
-        if (isNaN(amount) || amount <= 0) return clearAmount();
-        const transaction = { id: Date.now(), type, amount, category, date: getLocalDateString(), time: new Date().toLocaleTimeString(), status: 'active' };
+        if (isNaN(amount) || amount <= 0) {
+            alert("Please enter a valid amount.");
+            clearAmount();
+            return;
+        }
+        
+        const transaction = { id: Date.now(), type: pendingTransaction.type, amount, category: pendingTransaction.category, date: getLocalDateString(), time: new Date().toLocaleTimeString(), status: 'active' };
+        
         lastTransactionIdForUndo = transaction.id;
         transactions.push(transaction);
         localStorage.setItem('transactions', JSON.stringify(transactions));
+        
+        const btn = document.getElementById(`${pendingTransaction.type}-btn`);
+        btn.style.backgroundColor = pendingTransaction.type === 'income' ? '#d4edda' : '#f8d7da';
+        setTimeout(() => { btn.style.backgroundColor = '#fff'; }, 300);
+
+        pendingTransaction = null;
         clearAmount();
+        hideKeypad();
         renderTransactions();
         updateUndoButton();
-        hideCategorySelection();
-        const btn = document.querySelector(`.${type}`);
-        btn.style.backgroundColor = type === 'income' ? '#d4edda' : '#f8d7da';
-        setTimeout(() => { btn.style.backgroundColor = '#fff'; }, 300);
     }
-    
+
+    function addCustomCategory() {
+        const customCategory = customCategoryInput.value.trim();
+        if (customCategory === '') return alert('Please enter a name for your custom category.');
+        if (pendingTransaction && pendingTransaction.type) {
+            setPendingTransactionAndShowKeypad(pendingTransaction.type, customCategory);
+        }
+    }
+
+    // --- UI and Data Management ---
     function undoLastTransaction() { if (!lastTransactionIdForUndo) return; const transactionToUndo = transactions.find(t => t.id === lastTransactionIdForUndo); if (transactionToUndo) { transactionToUndo.status = 'undone'; lastTransactionIdForUndo = null; localStorage.setItem('transactions', JSON.stringify(transactions)); renderTransactions(); updateUndoButton(); alert('Last transaction undone.'); } }
+    function getLocalDateString() { const now = new Date(); return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`; }
+    function getTypes(type) { const defaultTypes = { income: ['Sales'], expense: ['Stock'] }; const storedTypes = JSON.parse(localStorage.getItem(`${type}Types`)); return (storedTypes && storedTypes.length > 0) ? storedTypes : defaultTypes[type]; }
     
-    // == MODIFIED: renderTransactions now filters by sessionStartId ==
     function renderTransactions() {
         transactionList.innerHTML = '';
-        
-        // Filter for transactions that are part of the current session
-        const transactionsToRender = transactions.filter(t => 
-            t.date === getLocalDateString() && 
-            t.status === 'active' &&
-            t.id > sessionStartId
-        );
-        
+        const transactionsToRender = transactions.filter(t => t.date === getLocalDateString() && t.status === 'active' && t.id > sessionStartId);
         const totalIncome = transactionsToRender.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
         const totalExpenses = transactionsToRender.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
         const subtotal = totalIncome - totalExpenses;
-
         totalIncomeDisplay.textContent = totalIncome.toFixed(2);
         totalExpensesDisplay.textContent = totalExpenses.toFixed(2);
         subtotalDisplay.textContent = subtotal.toFixed(2);
-        
         transactionsToRender.sort((a, b) => b.id - a.id);
         transactionsToRender.forEach(transaction => {
             const li = document.createElement('li');
@@ -221,31 +273,44 @@
 
     function updateUndoButton() { undoBtn.disabled = !lastTransactionIdForUndo; }
     
-    // == MODIFIED: endSession now uses the last transaction ID as the cutoff point ==
     function endSession() {
         if (confirm("Are you sure you want to end the session? This will clear the current view for new entries.")) {
-            // Find all of today's transactions to get the latest ID
             const todayTransactions = transactions.filter(t => t.date === getLocalDateString() && t.status === 'active');
             if (todayTransactions.length > 0) {
-                // Get the ID of the most recent transaction
                 const latestTransactionId = Math.max(...todayTransactions.map(t => t.id));
                 sessionStartId = latestTransactionId;
-                // Persist this cutoff point in sessionStorage
                 sessionStorage.setItem('sessionStartId', sessionStartId);
             }
             lastTransactionIdForUndo = null;
-            renderTransactions(); // This will now render an empty list and zeroed totals
+            renderTransactions();
             updateUndoButton();
         }
     }
     
-    // == MODIFIED: On load, check for a stored session cutoff point ==
+    // --- Event Listeners ---
+    incomeBtn.addEventListener('mousedown', () => startPress('income'));
+    incomeBtn.addEventListener('mouseup', () => endPress('income'));
+    expenseBtn.addEventListener('mousedown', () => startPress('expense'));
+    expenseBtn.addEventListener('mouseup', () => endPress('expense'));
+    incomeBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startPress('income'); }, { passive: false });
+    incomeBtn.addEventListener('touchend', () => endPress('income'));
+    expenseBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startPress('expense'); }, { passive: false });
+    expenseBtn.addEventListener('touchend', () => endPress('expense'));
+    
+    backspaceBtn.addEventListener('mousedown', () => { isLongPress = false; longPressTimer = setTimeout(() => { isLongPress = true; clearAmount(); }, LONG_PRESS_THRESHOLD); });
+    backspaceBtn.addEventListener('mouseup', () => { clearTimeout(longPressTimer); if (!isLongPress) backspace(); });
+    backspaceBtn.addEventListener('touchstart', (e) => { e.preventDefault(); isLongPress = false; longPressTimer = setTimeout(() => { isLongPress = true; clearAmount(); }, LONG_PRESS_THRESHOLD); }, { passive: false });
+    backspaceBtn.addEventListener('touchend', () => { clearTimeout(longPressTimer); if (!isLongPress) backspace(); });
+    
+    addCustomCategoryBtn.addEventListener('click', addCustomCategory);
+    addTransactionBtn.addEventListener('click', finalizeTransaction);
+    keypadOverlay.addEventListener('click', (event) => { if (event.target === keypadOverlay) hideKeypad(); });
+
     document.addEventListener('DOMContentLoaded', () => {
-        // Retrieve the cutoff ID from sessionStorage. If it exists, the user has ended a session before.
         sessionStartId = parseInt(sessionStorage.getItem('sessionStartId')) || 0;
-        
+        clearAmount();
         renderTransactions();
-        lastTransactionIdForUndo = null; // Undo is always disabled on load
+        lastTransactionIdForUndo = null;
         updateUndoButton();
     });
   </script>
